@@ -30,6 +30,16 @@ var APMOND = '/usr/sbin/apmond';
 /* node macs whose client table is open, kept across refreshes */
 var expanded = {};
 
+/*
+ * Fixed column widths (percent, each set sums to 100) with table-layout: fixed, so every node's
+ * client table lines up with the others. Long values wrap inside their cell. In the narrow
+ * (mobile) theme layout the rows are flex boxes, the widths do not apply and the data-title
+ * labels are shown instead of the hidden title row.
+ */
+var CLIENT_COLS = [ 13, 16, 5, 12, 13, 13, 9, 9, 10 ];
+var NODE_COLS = [ 15, 14, 21, 12, 13, 9, 6, 10 ];
+var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
+
 return view.extend({
 	/* "72.2_MBit/s_MCS_7" -> "72.2 MBit/s MCS 7" */
 	text: function(v) {
@@ -157,60 +167,111 @@ return view.extend({
 		return nodes;
 	},
 
+	/* the leading dBm of "-29_[-35,_-31]_dBm" or "-29 [-34, -31] dBm", or null */
+	parseSignal: function(v) {
+		var m = (v == null) ? null : String(v).match(/^\s*(-?[0-9]+)(?![0-9.])/);
+		return m ? parseInt(m[1], 10) : null;
+	},
+
+	/*
+	 * LuCI signal icon for a dBm value, with the quality mapping and thresholds of the
+	 * associated stations table in luci-mod-status (view/status/include/60_wifi.js):
+	 * q = min((dBm + 110) / 70 * 100, 100)
+	 */
+	signalIcon: function(dbm) {
+		var q = Math.min((dbm + 110) / 70 * 100, 100);
+
+		if (q <= 0)
+			return 'icons/signal-000-000.svg';
+		else if (q < 25)
+			return 'icons/signal-000-025.svg';
+		else if (q < 50)
+			return 'icons/signal-025-050.svg';
+		else if (q < 75)
+			return 'icons/signal-050-075.svg';
+		else
+			return 'icons/signal-075-100.svg';
+	},
+
+	/* signal cell content: '-' for wired, icon + text for wireless, text only if unparseable */
+	renderSignal: function(c) {
+		var dbm;
+
+		if (c.wired)
+			return '-';
+
+		dbm = this.parseSignal(c.signal);
+
+		if (dbm == null)
+			return this.text(c.signal);
+
+		return E('span', { 'class': 'ifacebadge', 'title': _('Signal') + ': ' + dbm + ' ' + _('dBm') }, [
+			E('img', { 'src': L.resource(this.signalIcon(dbm)), 'alt': '' }),
+			E('span', {}, [ ' ', this.text(c.signal) ])
+		]);
+	},
+
+	/* a th or td with a fixed width, wrapping long values, labelled for the mobile layout */
+	cell: function(tag, width, title, content) {
+		var attrs = { 'class': tag, 'style': 'width:' + width + '%;' + CELL_STYLE };
+
+		if (title != null)
+			attrs['data-title'] = title;
+
+		return E(tag, attrs, [ content ]);
+	},
+
+	/* a table with fixed column widths: titles and rows of cell contents */
+	fixedTable: function(widths, titles, rows) {
+		var self = this;
+
+		return E('table', { 'class': 'table', 'style': 'table-layout:fixed;width:100%' }, [
+			E('tr', { 'class': 'tr table-titles' }, titles.map(function(t, i) {
+				return self.cell('th', widths[i], null, t);
+			}))
+		].concat(rows.map(function(r) {
+			if (r.detail)
+				return r.detail;
+
+			return E('tr', { 'class': 'tr' }, r.map(function(v, i) {
+				return self.cell('td', widths[i], titles[i], v);
+			}));
+		})));
+	},
+
 	renderClients: function(node) {
 		var self = this;
 
 		if (!node.clients.length)
 			return E('em', {}, [ _('No clients') ]);
 
-		return E('table', { 'class': 'table' }, [
-			E('tr', { 'class': 'tr table-titles' }, [
-				E('th', { 'class': 'th' }, [ _('MAC address') ]),
-				E('th', { 'class': 'th' }, [ _('SSID@interface or port@bridge') ]),
-				E('th', { 'class': 'th' }, [ _('VLAN') ]),
-				E('th', { 'class': 'th' }, [ _('Signal') ]),
-				E('th', { 'class': 'th' }, [ _('TX bitrate') ]),
-				E('th', { 'class': 'th' }, [ _('RX bitrate') ]),
-				E('th', { 'class': 'th' }, [ _('RX bytes') ]),
-				E('th', { 'class': 'th' }, [ _('TX bytes') ]),
-				E('th', { 'class': 'th' }, [ _('Connected') ])
-			])
-		].concat(node.clients.map(function(c) {
+		return this.fixedTable(CLIENT_COLS, [
+			_('MAC address'), _('SSID@interface or port@bridge'), _('VLAN'), _('Signal'),
+			_('TX bitrate'), _('RX bitrate'), _('RX bytes'), _('TX bytes'), _('Connected')
+		], node.clients.map(function(c) {
 			var port = c.per_port ? ' ' + _('(per port)') : '';
 
-			return E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td' }, [ c.mac ]),
-				E('td', { 'class': 'td' }, [ self.text(c.where) ]),
-				E('td', { 'class': 'td' }, [ self.text(c.vlan) ]),
-				E('td', { 'class': 'td' }, [ c.wired ? '-' : self.text(c.signal) ]),
-				E('td', { 'class': 'td' }, [ c.wired ? self.formatBitrate(c.tx_bitrate) : self.text(c.tx_bitrate) ]),
-				E('td', { 'class': 'td' }, [ c.wired ? self.formatBitrate(c.rx_bitrate) : self.text(c.rx_bitrate) ]),
-				E('td', { 'class': 'td' }, [ self.formatBytes(c.rx_bytes) + port ]),
-				E('td', { 'class': 'td' }, [ self.formatBytes(c.tx_bytes) + port ]),
-				E('td', { 'class': 'td' }, [ c.connected_time != null ? self.formatDuration(c.connected_time) : '-' ])
-			]);
-		})));
+			return [
+				c.mac,
+				self.text(c.where),
+				self.text(c.vlan),
+				self.renderSignal(c),
+				c.wired ? self.formatBitrate(c.tx_bitrate) : self.text(c.tx_bitrate),
+				c.wired ? self.formatBitrate(c.rx_bitrate) : self.text(c.rx_bitrate),
+				self.formatBytes(c.rx_bytes) + port,
+				self.formatBytes(c.tx_bytes) + port,
+				c.connected_time != null ? self.formatDuration(c.connected_time) : '-'
+			];
+		}));
 	},
 
 	renderNodes: function(nodes) {
-		var self = this,
-		    rows = [
-			E('tr', { 'class': 'tr table-titles' }, [
-				E('th', { 'class': 'th' }, [ _('Device') ]),
-				E('th', { 'class': 'th' }, [ _('MAC address') ]),
-				E('th', { 'class': 'th' }, [ _('Release') ]),
-				E('th', { 'class': 'th' }, [ _('Uptime') ]),
-				E('th', { 'class': 'th' }, [ _('Load') ]),
-				E('th', { 'class': 'th' }, [ _('Free RAM') ]),
-				E('th', { 'class': 'th' }, [ _('Clients') ]),
-				E('th', { 'class': 'th' }, [ ' ' ])
-			])
-		    ];
+		var self = this, rows = [];
 
 		nodes.forEach(function(n) {
 			var open = !!expanded[n.mac],
 			    detail = E('tr', { 'class': 'tr', 'style': open ? null : 'display:none' }, [
-				E('td', { 'class': 'td', 'colspan': '8' }, [ self.renderClients(n) ])
+				E('td', { 'class': 'td', 'colspan': '8', 'style': 'flex:1 1 100%' }, [ self.renderClients(n) ])
 			    ]),
 			    btn = E('button', {
 				'class': 'btn cbi-button',
@@ -221,20 +282,22 @@ return view.extend({
 				}
 			    }, [ open ? _('Hide clients') : _('Show clients') ]);
 
-			rows.push(E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td' }, [ self.text(n.device) ]),
-				E('td', { 'class': 'td' }, [ n.mac ]),
-				E('td', { 'class': 'td' }, [ self.text(n.release) ]),
-				E('td', { 'class': 'td' }, [ self.formatDuration(n.uptime) ]),
-				E('td', { 'class': 'td' }, [ n.load.map(function(l) { return self.text(l); }).join(' / ') ]),
-				E('td', { 'class': 'td' }, [ self.formatKiB(n.free_ram_kb) ]),
-				E('td', { 'class': 'td' }, [ String(n.clients.length) ]),
-				E('td', { 'class': 'td' }, [ btn ])
-			]));
-			rows.push(detail);
+			rows.push([
+				self.text(n.device),
+				n.mac,
+				self.text(n.release),
+				self.formatDuration(n.uptime),
+				n.load.map(function(l) { return self.text(l); }).join(' / '),
+				self.formatKiB(n.free_ram_kb),
+				String(n.clients.length),
+				btn
+			]);
+			rows.push({ detail: detail });
 		});
 
-		return E('table', { 'class': 'table' }, rows);
+		return this.fixedTable(NODE_COLS, [
+			_('Device'), _('MAC address'), _('Release'), _('Uptime'), _('Load'), _('Free RAM'), _('Clients'), ' '
+		], rows);
 	},
 
 	/*

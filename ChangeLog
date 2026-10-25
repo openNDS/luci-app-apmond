@@ -6,6 +6,8 @@ luci-app-apmond (1.0.0)
   * Add - status warnings for checksum mismatch, default passphrase, storage fallback, logging disabled, protocol mismatch and daemon not running [bluewavenet]
   * Add - Access points page, show_ap_data all on the collector, one row per access point with its clients [bluewavenet]
   * Add - client tables with SSID@interface or port@bridge, vlan, signal, bitrates, bytes and connected time, wired byte counts marked per port [bluewavenet]
+  * Add - fixed column widths, so the client tables of every access point line up [bluewavenet]
+  * Add - LuCI signal icons with a dBm tooltip in the client Signal column, same thresholds as the LuCI wireless status [bluewavenet]
   * Add - peers fall back to get_ap_data and show only their own report [bluewavenet]
   * Add - Log page, apmond read_log with a refresh button [bluewavenet]
   * Add - rpcd ACL allows only apmond status, show_ap_data all, get_ap_data and read_log, no ucode, Lua or rpcd plugin [bluewavenet]

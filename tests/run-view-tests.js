@@ -40,7 +40,7 @@ function loadView(name, fakes) {
 	const env = Object.assign({
 		view: { extend: (o) => o },
 		form: {}, fs: {}, ui: {}, poll: { add: () => {} }, dom: { content: () => {} }, uci: {},
-		L: { resolveDefault: (p, d) => Promise.resolve(p).catch(() => d) },
+		L: { resolveDefault: (p, d) => Promise.resolve(p).catch(() => d), resource: (p) => '/luci-static/resources/' + p },
 		E, _: (s) => s
 	}, fakes || {});
 	const names = Object.keys(env);
@@ -115,6 +115,45 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const t = ap.renderNodes(nodes);
 	assert.strictEqual(find(t, 'button').length, 2);
 	assert.ok(text(t).includes('(per port)') && text(t).includes('OpenWrt5@phy1-ap0')); ok('ap: renderNodes renders a row and a client table per node');
+
+	// fixed column widths: every client table (and the node table) has the same widths, summing to 100%
+	const widthsOf = (tbl) => tbl.children[0].children.map((c) => c.attrs.style.match(/width:([0-9]+)%/)[1]);
+	const ctabs = find(t, 'table').slice(1);
+	assert.strictEqual(ctabs.length, 2);
+	assert.ok(ctabs.every((x) => /table-layout:fixed/.test(x.attrs.style)));
+	assert.deepStrictEqual(widthsOf(ctabs[0]), widthsOf(ctabs[1]));
+	assert.strictEqual(widthsOf(ctabs[0]).length, 9);
+	assert.strictEqual(widthsOf(ctabs[0]).reduce((a, b) => a + +b, 0), 100);
+	ctabs.forEach((x) => x.children.slice(1).forEach((row) => assert.deepStrictEqual(widthsOf({ children: [ row ] }), widthsOf(ctabs[0]))));
+	ok('ap: client tables of both nodes use identical fixed column widths summing to 100%');
+	assert.ok(/table-layout:fixed/.test(t.attrs.style) && widthsOf(t).length === 8 && widthsOf(t).reduce((a, b) => a + +b, 0) === 100);
+	ok('ap: node table has fixed column widths summing to 100%');
+	const mixed = ap.renderClients({ clients: [ wl, wd ] });
+	assert.ok(mixed.children.slice(1).every((row) => row.children.every((c) => /overflow-wrap:anywhere/.test(c.attrs.style) && c.attrs['data-title'])));
+	ok('ap: client cells wrap long values and carry data-title labels for the mobile layout');
+
+	// signal icons: luci-mod-status 60_wifi.js mapping q = min((dBm + 110) / 70 * 100, 100)
+	assert.strictEqual(ap.parseSignal('-29_[-35,_-31]_dBm'), -29);
+	assert.strictEqual(ap.parseSignal('-29 [-34, -31] dBm'), -29);
+	assert.strictEqual(ap.parseSignal(' -51 dBm'), -51);
+	[ null, undefined, '', 'unknown', 'n/a dBm', '-29.5 dBm' ].forEach((v) => assert.strictEqual(ap.parseSignal(v), null, String(v)));
+	ok('ap: leading dBm parsed from iw signal strings, unparseable gives null');
+	[ [ -120, '000-000' ], [ -110, '000-000' ], [ -109, '000-025' ], [ -93, '000-025' ], [ -92.5, '025-050' ], [ -92, '025-050' ],
+	  [ -76, '025-050' ], [ -75, '050-075' ], [ -58, '050-075' ], [ -57.5, '075-100' ], [ -57, '075-100' ], [ -29, '075-100' ], [ 0, '075-100' ] ]
+		.forEach(([ dbm, icon ]) => assert.strictEqual(ap.signalIcon(dbm), 'icons/signal-' + icon + '.svg', String(dbm)));
+	ok('ap: signal icon per threshold, including the edge values');
+	const sig = ap.renderSignal({ wired: false, signal: '-29_[-35,_-31]_dBm' });
+	const img = find(sig, 'img');
+	assert.strictEqual(img.length, 1);
+	assert.strictEqual(img[0].attrs.src, '/luci-static/resources/icons/signal-075-100.svg');
+	assert.strictEqual(sig.attrs.title, 'Signal: -29 dBm');
+	assert.ok(text(sig).includes('-29 [-35, -31] dBm')); ok('ap: wireless signal shows the icon, the dBm text and a tooltip');
+	assert.strictEqual(ap.renderSignal({ wired: true, signal: '-29 dBm' }), '-');
+	assert.strictEqual(ap.renderSignal(wd), '-'); ok('ap: wired clients keep -');
+	assert.strictEqual(ap.renderSignal({ wired: false, signal: 'unknown' }), 'unknown');
+	assert.strictEqual(find(ap.renderClients({ clients: [ wd ] }), 'img').length, 0); ok('ap: unparseable signal is text only, no icon');
+	assert.strictEqual(find(t, 'img').length, nodes.reduce((a, n) => a + n.clients.filter((c) => !c.wired && ap.parseSignal(c.signal) != null).length, 0));
+	ok('ap: one signal icon per wireless client in renderNodes');
 
 	const own = ap.parseNodes(ap.parseJSON(sample('get_ap_data_peer.json')));
 	assert.strictEqual(own.length, 1); ok('ap: get_ap_data gives this node only');
