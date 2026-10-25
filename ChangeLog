@@ -1,7 +1,7 @@
 luci-app-apmond (1.0.0)
   * Add - Settings page for the apmond setup section, General and Advanced tabs, every option optional [bluewavenet]
   * Add - built-in defaults shown as placeholders, an option is only written when it is changed [bluewavenet]
-  * Add - warning while apmon_seed is unset and the insecure built-in default passphrase is in use [bluewavenet]
+  * Add - notice while apmon_seed is unset and the built-in default passphrase is in use [bluewavenet]
   * Add - Status page, apmond status JSON as a table, refreshed every 10 seconds [bluewavenet]
   * Add - status warnings for checksum mismatch, default passphrase, storage fallback, logging disabled, protocol mismatch and daemon not running [bluewavenet]
   * Add - Access points page, show_ap_data all on the collector, one row per access point with its clients [bluewavenet]

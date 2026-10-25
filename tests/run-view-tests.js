@@ -71,7 +71,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	Object.assign(bad.apmond_status, {
 		daemon_running: 'yes', checksum: 'aaaa',
 		checksum_warning: 'running daemon differs from /usr/sbin/apmond - restart apmond',
-		default_passphrase: 'yes', passphrase_warning: 'INSECURE: the default built-in passphrase is in use',
+		default_passphrase: 'yes', passphrase_warning: 'The built-in default passphrase is in use. Make ApmonD more secure by setting option apmon_seed in /etc/config/apmond (the same on every node)',
 		storage_warning: 'log_mountpoint [ /mnt/usb ] is not mounted - falling back to /tmp',
 		logging: 'DISABLED: Log location is NOT a mountpoint',
 		protocol_mismatch_nodes: [ '020000aa0009' ]
@@ -87,7 +87,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	[ null, '', 'garbage', '[]', '{"x":1}' ].forEach((t) => assert.strictEqual(st.parseStatus(t), null));
 	ok('status: empty or bad output gives null');
 	assert.ok(text(st.renderStatus(sample('status_router.json'))).includes('router')); ok('status: renderStatus renders');
-	assert.ok(text(st.renderStatus(JSON.stringify(bad))).includes('INSECURE')); ok('status: renderStatus shows warnings');
+	assert.ok(text(st.renderStatus(JSON.stringify(bad))).includes('Make ApmonD more secure by setting option apmon_seed')); ok('status: renderStatus shows warnings');
 	assert.ok(text(st.renderStatus('')).includes('Could not read')); ok('status: renderStatus with no output');
 
 	// Access points
@@ -169,8 +169,12 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 		const sv2 = loadView('settings', { form: fakeForm, uci: { get: () => seed, load: () => Promise.resolve() } });
 		const node = await sv2.render();
 		assert.strictEqual(node.children.length, seed ? 0 : 1);
+		if (!seed) {
+			const t = text(node.children[0]);
+			assert.ok(t.includes('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase, the same on every node.') && !/insecure/i.test(t), t);
+		}
 	}
-	ok('settings: default passphrase warning only while apmon_seed is unset');
+	ok('settings: default passphrase notice only while apmon_seed is unset');
 	const cfgOpts = (fs.readFileSync(path.join(__dirname, 'samples/apmond.config'), 'utf8').match(/#(?:option|list) (\w+)/g) || []).map((x) => x.split(' ')[1]);
 	const have = opts.map((o) => o.option);
 	assert.deepStrictEqual([ ...have ].sort(), [ ...new Set(cfgOpts.concat([ 'apmon_seed' ])) ].sort()); ok('settings: every option in /etc/config/apmond is on the page (' + have.length + ')');

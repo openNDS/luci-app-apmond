@@ -16,7 +16,7 @@ return view.extend({
 		return uci.load('apmond');
 	},
 
-	/* true when apmond would use its insecure built-in passphrase */
+	/* true when apmond would use its built-in default passphrase */
 	seedIsDefault: function(seed) {
 		return (seed == null || seed === '' || seed === DEFAULT_SEED);
 	},
@@ -38,11 +38,9 @@ return view.extend({
 		return o;
 	},
 
-	seedWarning: function() {
-		return E('div', { 'class': 'alert-message warning' }, [
-			E('strong', {}, _('Insecure: the built-in default passphrase is in use.')), ' ',
-			_('Anyone who knows the default can read and inject access point data. Set your own passphrase in General Settings, the same on every node, and save it on every node.')
-		]);
+	seedNotice: function() {
+		return E('div', { 'class': 'alert-message notice' },
+			_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase, the same on every node.'));
 	},
 
 	render: function() {
@@ -65,7 +63,7 @@ return view.extend({
 		o.default = '1';
 
 		o = s.taboption('general', form.Value, 'apmon_seed', _('Passphrase'),
-			_('A memorable passphrase, identical on every node. The report signing secret and the IPv6 ULA prefix are both derived from it. While it is empty an insecure built-in default is used.'));
+			_('Identical on every node. The report signing secret and the IPv6 ULA prefix are both derived from it. While it is empty a built-in default is used. Make ApmonD more secure by adding your own passphrase.'));
 		o.password = true;
 		o.rmempty = true;
 
@@ -157,7 +155,7 @@ return view.extend({
 
 		return m.render().then(function(node) {
 			if (self.seedIsDefault(uci.get('apmond', 'setup', 'apmon_seed')))
-				node.insertBefore(self.seedWarning(), node.firstChild);
+				node.insertBefore(self.seedNotice(), node.firstChild);
 			return node;
 		});
 	}

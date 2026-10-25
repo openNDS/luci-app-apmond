@@ -87,7 +87,7 @@ return view.extend({
 		});
 
 		if (st.default_passphrase == 'yes' && !st.passphrase_warning)
-			w.push(_('The default built-in passphrase is in use. Set your own passphrase in Settings, the same on every node.'));
+			w.push(_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase in Settings, the same on every node.'));
 
 		if (typeof(st.logging) == 'string' && st.logging.indexOf('DISABLED') == 0)
 			w.push(st.logging);

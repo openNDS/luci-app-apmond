@@ -11,9 +11,9 @@ Services > ApmonD has four tabs:
 
 * **Settings** - the options of `config apmond 'setup'` in `/etc/config/apmond`, with a General
   and an Advanced tab. Every option is optional: the apmond defaults are shown as placeholders
-  and an option is only written when you change it. While `apmon_seed` is not set a warning is
-  shown, because apmond then uses its insecure built-in default passphrase. The passphrase must
-  be the same on every node.
+  and an option is only written when you change it. While `apmon_seed` is not set a notice is
+  shown, because apmond then uses its built-in default passphrase. Make ApmonD more secure by
+  adding your own passphrase, the same on every node.
 * **Status** - `apmond status` as a table, refreshed every 10 seconds. Problems are highlighted:
   a running daemon that differs from the installed one, the default passphrase, a
   `log_mountpoint` that fell back to `/tmp`, logging disabled, nodes with a different protocol
