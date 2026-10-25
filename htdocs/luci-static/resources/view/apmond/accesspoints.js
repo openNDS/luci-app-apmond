@@ -36,7 +36,7 @@ var expanded = {};
  * (mobile) theme layout the rows are flex boxes, the widths do not apply and the data-title
  * labels are shown instead of the hidden title row.
  */
-var CLIENT_COLS = [ 13, 16, 5, 12, 13, 13, 9, 9, 10 ];
+var CLIENT_COLS = [ 13, 15, 5, 13, 13, 13, 9, 9, 10 ];
 var NODE_COLS = [ 15, 14, 21, 12, 13, 9, 6, 10 ];
 var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
 
@@ -193,7 +193,37 @@ return view.extend({
 			return 'icons/signal-075-100.svg';
 	},
 
-	/* signal cell content: '-' for wired, icon + text for wireless, text only if unparseable */
+	/* per antenna values of "-38_[-44,_-39]_dBm" -> [ -44, -39 ], or [] */
+	parseAntennas: function(v) {
+		var m = (v == null) ? null : String(v).match(/\[([^\]]*)\]/);
+
+		if (!m)
+			return [];
+
+		return m[1].replace(/_/g, ' ').split(',').map(function(x) {
+			return x.trim();
+		}).filter(function(x) {
+			return /^-?[0-9]+$/.test(x);
+		}).map(function(x) {
+			return parseInt(x, 10);
+		});
+	},
+
+	/* "Signal: -38 dBm (antennas: -44, -39 dBm)", or "Signal: -38 dBm" */
+	signalTitle: function(v, dbm) {
+		var ant = this.parseAntennas(v),
+		    t = _('Signal') + ': ' + dbm + ' ' + _('dBm');
+
+		if (ant.length)
+			t += ' (' + _('antennas') + ': ' + ant.join(', ') + ' ' + _('dBm') + ')';
+
+		return t;
+	},
+
+	/*
+	 * signal cell content: '-' for wired; for wireless the LuCI signal icon and the leading
+	 * value ("-38 dBm") on one line, details in the tooltip; the text as is if unparseable
+	 */
 	renderSignal: function(c) {
 		var dbm;
 
@@ -205,9 +235,9 @@ return view.extend({
 		if (dbm == null)
 			return this.text(c.signal);
 
-		return E('span', { 'class': 'ifacebadge', 'title': _('Signal') + ': ' + dbm + ' ' + _('dBm') }, [
-			E('img', { 'src': L.resource(this.signalIcon(dbm)), 'alt': '' }),
-			E('span', {}, [ ' ', this.text(c.signal) ])
+		return E('span', { 'style': 'white-space:nowrap', 'title': this.signalTitle(c.signal, dbm) }, [
+			E('img', { 'src': L.resource(this.signalIcon(dbm)), 'alt': '', 'style': 'width:20px;height:20px;vertical-align:middle' }),
+			' ' + dbm + ' ' + _('dBm')
 		]);
 	},
 

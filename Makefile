@@ -13,7 +13,7 @@ LUCI_DEPENDS:=+luci-base +apmond
 LUCI_PKGARCH:=all
 
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_LICENSE:=GPL-2.0
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
 

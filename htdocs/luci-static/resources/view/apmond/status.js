@@ -49,7 +49,10 @@ var LABELS = [
 ];
 
 /* keys that only exist to carry a warning, shown in the warning box rather than the table */
-var WARNING_KEYS = [ 'checksum_warning', 'passphrase_warning', 'storage_warning' ];
+var WARNING_KEYS = [ 'checksum_warning', 'storage_warning' ];
+
+/* keys that carry an informational note, shown in a plain notice box rather than the table */
+var NOTE_KEYS = [ 'passphrase_warning' ];
 
 var ROUTER_DETECT = { '0': _('force router/collector'), '1': _('auto detect'), '2': _('force peer') };
 var DEBUGLEVEL = { '0': _('errors'), '1': _('notices'), '2': _('info'), '3': _('debug') };
@@ -77,6 +80,21 @@ return view.extend({
 		return (obj && typeof(obj.apmond_status) == 'object') ? obj.apmond_status : null;
 	},
 
+	/* list of informational notes for a parsed status (the default passphrase) */
+	statusNotes: function(st) {
+		var n = [];
+
+		NOTE_KEYS.forEach(function(k) {
+			if (st[k])
+				n.push(String(st[k]));
+		});
+
+		if (st.default_passphrase == 'yes' && !st.passphrase_warning)
+			n.push(_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase in Settings, the same on every node.'));
+
+		return n;
+	},
+
 	/* list of warning strings for a parsed status */
 	statusWarnings: function(st) {
 		var w = [];
@@ -85,9 +103,6 @@ return view.extend({
 			if (st[k])
 				w.push(String(st[k]));
 		});
-
-		if (st.default_passphrase == 'yes' && !st.passphrase_warning)
-			w.push(_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase in Settings, the same on every node.'));
 
 		if (typeof(st.logging) == 'string' && st.logging.indexOf('DISABLED') == 0)
 			w.push(st.logging);
@@ -107,8 +122,6 @@ return view.extend({
 		case 'checksum':
 		case 'installed_checksum':
 			return !!st.checksum_warning;
-		case 'default_passphrase':
-			return st.default_passphrase == 'yes';
 		case 'log_mountpoint':
 		case 'ap_data_dir':
 			return !!st.storage_warning;
@@ -157,7 +170,7 @@ return view.extend({
 				rows.push([ l[0], l[1], self.formatValue(l[0], st[l[0]]), self.isWarningKey(st, l[0]) ]);
 		});
 
-		WARNING_KEYS.forEach(function(k) { seen[k] = true; });
+		WARNING_KEYS.concat(NOTE_KEYS).forEach(function(k) { seen[k] = true; });
 
 		Object.keys(st).forEach(function(k) {
 			if (!seen[k])
@@ -174,7 +187,8 @@ return view.extend({
 			return E('div', { 'class': 'alert-message error' },
 				_('Could not read the ApmonD status. Is apmond installed?'));
 
-		var warnings = this.statusWarnings(st);
+		var warnings = this.statusWarnings(st),
+		    notes = this.statusNotes(st);
 
 		var table = E('table', { 'class': 'table' }, this.statusRows(st).map(function(r) {
 			return E('tr', { 'class': 'tr' }, [
@@ -184,6 +198,8 @@ return view.extend({
 		}));
 
 		return E('div', {}, [
+			notes.length ? E('div', { 'class': 'alert-message notice' },
+				notes.map(function(n) { return E('p', {}, [ n ]); })) : '',
 			warnings.length ? E('div', { 'class': 'alert-message warning' },
 				warnings.map(function(w) { return E('p', {}, [ w ]); })) : '',
 			table

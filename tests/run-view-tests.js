@@ -78,16 +78,30 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	});
 	const b = st.parseStatus(JSON.stringify(bad));
 	const w = st.statusWarnings(b);
-	assert.strictEqual(w.length, 5, w.join('\n')); ok('status: checksum, passphrase, storage, logging and protocol warnings');
+	assert.strictEqual(w.length, 4, w.join('\n')); ok('status: checksum, storage, logging and protocol warnings');
+	assert.ok(!w.some((x) => /passphrase/.test(x)));
+	assert.deepStrictEqual(st.statusNotes(b), [ bad.apmond_status.passphrase_warning ]);
+	assert.ok(st.statusNotes({ default_passphrase: 'yes' })[0].includes('adding your own passphrase in Settings'));
+	assert.deepStrictEqual(st.statusNotes({ default_passphrase: 'no' }), []); ok('status: default passphrase is a note, not a warning (apmond text, or the fallback)');
 	const brows = st.statusRows(b);
-	[ 'checksum', 'installed_checksum', 'default_passphrase', 'log_mountpoint', 'logging', 'protocol_mismatch_nodes' ]
+	[ 'checksum', 'installed_checksum', 'log_mountpoint', 'logging', 'protocol_mismatch_nodes' ]
 		.forEach((k) => assert.ok(brows.find((x) => x[0] === k)[3], k));
-	assert.ok(!brows.find((x) => x[0] === 'checksum_warning')); ok('status: warning rows highlighted, warning keys not repeated in the table');
+	assert.strictEqual(brows.find((x) => x[0] === 'default_passphrase')[3], false);
+	assert.strictEqual(brows.find((x) => x[0] === 'default_passphrase')[2], 'yes'); ok('status: Default passphrase in use yes is plain text, not highlighted');
+	assert.ok(!brows.find((x) => x[0] === 'checksum_warning') && !brows.find((x) => x[0] === 'passphrase_warning')); ok('status: warning rows highlighted, warning keys not repeated in the table');
 	assert.ok(st.statusWarnings(st.parseStatus('{"apmond_status":{"enabled":"1","daemon_running":"no"}}'))[0].includes('not running')); ok('status: enabled but not running warned');
 	[ null, '', 'garbage', '[]', '{"x":1}' ].forEach((t) => assert.strictEqual(st.parseStatus(t), null));
 	ok('status: empty or bad output gives null');
 	assert.ok(text(st.renderStatus(sample('status_router.json'))).includes('router')); ok('status: renderStatus renders');
-	assert.ok(text(st.renderStatus(JSON.stringify(bad))).includes('Make ApmonD more secure by setting option apmon_seed')); ok('status: renderStatus shows warnings');
+	const rs = st.renderStatus(JSON.stringify(bad));
+	const notice = rs.children.find((c) => c && c.attrs && c.attrs.class === 'alert-message notice');
+	const warnbox = rs.children.find((c) => c && c.attrs && c.attrs.class === 'alert-message warning');
+	assert.ok(text(notice).includes('Make ApmonD more secure by setting option apmon_seed'));
+	assert.ok(!text(warnbox).includes('passphrase') && text(warnbox).includes('restart apmond'));
+	const pr = find(rs, 'tr').find((r) => text(r).includes('Default passphrase in use'));
+	assert.ok(!pr.children[1].attrs.style); ok('status: renderStatus shows the passphrase note in a plain notice box, warnings separately');
+	const rs2 = st.renderStatus(JSON.stringify({ apmond_status: { enabled: '1', daemon_running: 'yes', default_passphrase: 'no' } }));
+	assert.ok(!rs2.children.find((c) => c && c.attrs && /alert-message/.test(c.attrs.class || ''))); ok('status: no boxes when there is nothing to report');
 	assert.ok(text(st.renderStatus('')).includes('Could not read')); ok('status: renderStatus with no output');
 
 	// Access points
@@ -146,8 +160,17 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const img = find(sig, 'img');
 	assert.strictEqual(img.length, 1);
 	assert.strictEqual(img[0].attrs.src, '/luci-static/resources/icons/signal-075-100.svg');
-	assert.strictEqual(sig.attrs.title, 'Signal: -29 dBm');
-	assert.ok(text(sig).includes('-29 [-35, -31] dBm')); ok('ap: wireless signal shows the icon, the dBm text and a tooltip');
+	assert.strictEqual(sig.attrs.title, 'Signal: -29 dBm (antennas: -35, -31 dBm)');
+	assert.ok(!sig.attrs.class && /white-space:nowrap/.test(sig.attrs.style), 'no badge box, one line');
+	assert.strictEqual(text(sig).trim(), '-29 dBm'); ok('ap: wireless signal shows no box, the icon and the leading dBm, antennas in the tooltip');
+	const sig2 = ap.renderSignal({ wired: false, signal: '-38 [-44, -39] dBm' });
+	assert.strictEqual(sig2.attrs.title, 'Signal: -38 dBm (antennas: -44, -39 dBm)');
+	assert.strictEqual(find(sig2, 'img')[0].attrs.src, '/luci-static/resources/icons/signal-075-100.svg');
+	const sig3 = ap.renderSignal({ wired: false, signal: '-61_dBm' });
+	assert.strictEqual(sig3.attrs.title, 'Signal: -61 dBm');
+	assert.strictEqual(text(sig3).trim(), '-61 dBm');
+	assert.deepStrictEqual(ap.parseAntennas('-38_[-44,_-39]_dBm'), [ -44, -39 ]);
+	assert.deepStrictEqual(ap.parseAntennas('-61 dBm'), []); ok('ap: tooltip with and without per antenna values');
 	assert.strictEqual(ap.renderSignal({ wired: true, signal: '-29 dBm' }), '-');
 	assert.strictEqual(ap.renderSignal(wd), '-'); ok('ap: wired clients keep -');
 	assert.strictEqual(ap.renderSignal({ wired: false, signal: 'unknown' }), 'unknown');

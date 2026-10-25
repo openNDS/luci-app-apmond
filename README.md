@@ -15,9 +15,9 @@ Services > ApmonD has four tabs:
   shown, because apmond then uses its built-in default passphrase. Make ApmonD more secure by
   adding your own passphrase, the same on every node.
 * **Status** - `apmond status` as a table, refreshed every 10 seconds. Problems are highlighted:
-  a running daemon that differs from the installed one, the default passphrase, a
-  `log_mountpoint` that fell back to `/tmp`, logging disabled, nodes with a different protocol
-  and a daemon that is enabled but not running.
+  a running daemon that differs from the installed one, a `log_mountpoint` that fell back to
+  `/tmp`, logging disabled, nodes with a different protocol and a daemon that is enabled but not
+  running. The default passphrase is shown as a plain note.
 * **Access points** - on the collector (the router), `apmond show_ap_data all`: one row per
   access point, with a button to show its clients. On a peer, `apmond get_ap_data` is shown
   instead, for that node only; the full list is on the collector. Refreshed every 30 seconds.
