@@ -2,6 +2,7 @@
 'require view';
 'require form';
 'require uci';
+'require dom';
 
 /*
  * ApmonD settings: the single "config apmond 'setup'" section of /etc/config/apmond.
@@ -154,9 +155,32 @@ return view.extend({
 		o.default = '0';
 
 		return m.render().then(function(node) {
-			if (self.seedIsDefault(uci.get('apmond', 'setup', 'apmon_seed')))
-				node.insertBefore(self.seedNotice(), node.firstChild);
-			return node;
+			/* the notice lives outside the map, which re-renders its own contents on save */
+			self.noticeSlot = E('div', {});
+			self.updateSeedNotice();
+			return E('div', {}, [ self.noticeSlot, node ]);
+		});
+	},
+
+	/* show the default passphrase notice while the saved config has no passphrase of its own */
+	updateSeedNotice: function() {
+		if (!this.noticeSlot)
+			return;
+
+		dom.content(this.noticeSlot,
+			this.seedIsDefault(uci.get('apmond', 'setup', 'apmon_seed')) ? this.seedNotice() : null);
+	},
+
+	/*
+	 * Save (also used by Save & Apply): the map saves and reloads the uci data, then the
+	 * notice follows the saved value, gone once a passphrase is saved, back if it is cleared
+	 */
+	handleSave: function(ev) {
+		var self = this;
+
+		return Promise.resolve(this.super('handleSave', [ ev ])).then(function(rv) {
+			self.updateSeedNotice();
+			return rv;
 		});
 	}
 });

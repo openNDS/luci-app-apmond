@@ -226,17 +226,39 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 			return { tab: (t) => tabs.push(t), taboption: (tab, type, name) => { const o = new Opt(type, name); o.tab = tab; opts.push(o); return o; } }; };
 			this.render = () => Promise.resolve({ children: [], firstChild: null, insertBefore: function(n) { this.children.unshift(n); } }); } };
 	fakeForm.ListValue = function() {}; fakeForm.ListValue.prototype.write = function() { return 'written'; };
+	const fakeDom = { content: (el, c) => { el.children = c == null ? [] : [ c ]; } };
+	const superCalls = [];
+	const fakeView = { extend: (o) => { o.super = (name, args) => { superCalls.push(name); return Promise.resolve('saved'); }; return o; } };
+	const noticeOf = (node) => node.children[0].children;
 	for (const seed of [ undefined, 'my secret' ]) {
 		opts.length = 0;
-		const sv2 = loadView('settings', { form: fakeForm, uci: { get: () => seed, load: () => Promise.resolve() } });
+		const sv2 = loadView('settings', { form: fakeForm, dom: fakeDom, view: fakeView, uci: { get: () => seed, load: () => Promise.resolve() } });
 		const node = await sv2.render();
-		assert.strictEqual(node.children.length, seed ? 0 : 1);
+		assert.strictEqual(node.children.length, 2);
+		assert.strictEqual(noticeOf(node).length, seed ? 0 : 1);
 		if (!seed) {
-			const t = text(node.children[0]);
+			const t = text(noticeOf(node)[0]);
 			assert.ok(t.includes('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase, the same on every node.') && !/insecure/i.test(t), t);
 		}
 	}
 	ok('settings: default passphrase notice only while apmon_seed is unset');
+	// the notice follows the saved config after Save / Save & Apply, without a page reload
+	let saved;
+	opts.length = 0;
+	const sv3 = loadView('settings', { form: fakeForm, dom: fakeDom, view: fakeView, uci: { get: (c, s, o) => (c === 'apmond' && s === 'setup' && o === 'apmon_seed') ? saved : undefined, load: () => Promise.resolve() } });
+	const n3 = await sv3.render();
+	assert.strictEqual(noticeOf(n3).length, 1);
+	saved = 'my secret';
+	assert.strictEqual(await sv3.handleSave({}), 'saved');
+	assert.strictEqual(noticeOf(n3).length, 0, 'notice removed once a passphrase is saved');
+	saved = '';
+	await sv3.handleSave({});
+	assert.strictEqual(noticeOf(n3).length, 1, 'notice back when the passphrase is cleared');
+	saved = '--__';
+	await sv3.handleSave({});
+	assert.strictEqual(noticeOf(n3).length, 1);
+	assert.deepStrictEqual(superCalls.slice(-3), [ 'handleSave', 'handleSave', 'handleSave' ]);
+	ok('settings: notice re-evaluated after save, gone when a passphrase is saved, back when cleared');
 	const cfgOpts = (fs.readFileSync(path.join(__dirname, 'samples/apmond.config'), 'utf8').match(/#(?:option|list) (\w+)/g) || []).map((x) => x.split(' ')[1]);
 	const have = opts.map((o) => o.option);
 	assert.deepStrictEqual([ ...have ].sort(), [ ...new Set(cfgOpts.concat([ 'apmon_seed' ])) ].sort()); ok('settings: every option in /etc/config/apmond is on the page (' + have.length + ')');
