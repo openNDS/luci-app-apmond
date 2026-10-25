@@ -1,0 +1,44 @@
+{
+  "apmond_status": {
+    "apmond_version": "1.0.0",
+    "apmond_protocol": "1",
+    "checksum": "afe183378a21f9f4a6262e271bdeba361e6607b1eb79a3b1518b148cf2ed5f57",
+    "installed_checksum": "afe183378a21f9f4a6262e271bdeba361e6607b1eb79a3b1518b148cf2ed5f57",
+    "enabled": "1",
+    "daemon_running": "no",
+    "daemon_pid": "none",
+    "interval_seconds": "30",
+    "debuglevel": "1",
+    "router_detect": "1",
+    "default_passphrase": "no",
+    "ula_prefix": "fd18:cef4:6dbd::/48",
+    "ula_subnet": "baa0",
+    "collector": "fd18:cef4:6dbd:baa0::1",
+    "device": "apmbr0",
+    "ap_mac_id": "02:00:00:0a:00:00",
+    "bridge_detect": "auto",
+    "bridges": [
+      "apmbr0"
+    ],
+    "role": "unknown (daemon not run yet)",
+    "role_reason": "none",
+    "node_ula": "fd18:cef4:6dbd:baa0:200:ff:fe0a:0",
+    "ula_addresses": {
+      "apmbr0": []
+    },
+    "last_send": {
+      "date_time": "Sun Oct 25 19:22:37 GMT 2026",
+      "status": "*end",
+      "retcode": "0",
+      "bytes": "6086"
+    },
+    "log_mountpoint": "/tmp",
+    "ap_data_dir": "/tmp/apmond-test/tmp-C/apmond_data",
+    "log_file": "/tmp/apmond-test/tmp-C/apmond_log.log",
+    "cgi_dir": "/tmp/apmond-test/www-default/cgi-bin/",
+    "logging": "enabled",
+    "runtime_dir": "/tmp/apmond-test/run-C",
+    "access_points_with_data": "0",
+    "protocol_mismatch_nodes": []
+  }
+}
