@@ -377,7 +377,7 @@ return view.extend({
 
 		if (data.collector_ula) {
 			var url = this.collectorURL(data.collector_ula);
-			link = E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener' }, [ url ]);
+			link = E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ _('here') ]);
 		}
 
 		if (data.role == 'router') {
@@ -398,7 +398,7 @@ return view.extend({
 
 		return E('div', { 'class': 'alert-message notice' }, [
 			E('p', {}, [ E('strong', {}, [ lead ]), ' ', rest ]),
-			link ? E('p', {}, [ _('Open the collector\'s Access points page:') + ' ', link ]) : ''
+			link ? E('p', {}, [ _('Click') + ' ', link, ' ' + _('to open the collector\'s Access points page in a new window.') ]) : ''
 		]);
 	},
 
