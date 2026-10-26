@@ -206,7 +206,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	assert.ok(text(pn).includes('Not a collector.') && text(pn).includes('fd18:cef4:6dbd:baa0::1')); ok('ap: peer note says not a collector and names the collector');
 	const a = find(pn, 'a')[0];
 	assert.strictEqual(a.attrs.href, 'https://[fd18:cef4:6dbd:baa0::1]/cgi-bin/luci/admin/services/apmond/accesspoints'); ok('ap: link to the collector Access points page');
-	assert.ok(text(a) === 'here' && a.attrs.target === '_blank' && text(pn).includes('Click here to open the collector')); ok('ap: "here" link opens a new window');
+	assert.ok(text(a) === 'here' && a.attrs.target === '_blank' && text(pn).replace(/\s+/g, ' ').includes('Click here to open the collector')); ok('ap: "here" link opens a new window');
 	assert.ok(find(ap.renderData(Object.assign({}, d, { role: 'backed-off' })), 'a').length === 1); ok('ap: backed-off router gets the link too');
 	const rn = ap.renderData(Object.assign({}, d, { role: 'router' }));
 	assert.ok(text(rn).includes('This node is the collector.') && find(rn, 'a').length === 0); ok('ap: collector with no reports yet, no link');
