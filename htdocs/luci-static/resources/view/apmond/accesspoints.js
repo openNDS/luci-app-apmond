@@ -407,7 +407,7 @@ return view.extend({
 			return E('div', {}, [
 				this.peerNote(data),
 				E('div', { 'class': 'alert-message warning' },
-					_('No access point data for this node yet. apmond get_ap_data returned nothing.'))
+					_('This node has no clients connected at the moment, so it has no access point report to show.'))
 			]);
 
 		if (!data.nodes.length)
