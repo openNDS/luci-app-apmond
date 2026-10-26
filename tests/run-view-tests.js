@@ -38,7 +38,8 @@ function find(n, tag, out) {
 function loadView(name, fakes) {
 	const src = fs.readFileSync(path.join(VIEWS, name + '.js'), 'utf8');
 	const env = Object.assign({
-		view: { extend: (o) => o },
+		view: { extend: (o) => o }, baseclass: { extend: (o) => o },
+		apmondver: name === 'version' ? undefined : loadView('version', { fs: { exec_direct: () => Promise.resolve('apmond version 1.0.1~be7a\n') } }),
 		form: {}, fs: {}, ui: {}, poll: { add: () => {} }, dom: { content: () => {} }, uci: {},
 		L: { resolveDefault: (p, d) => Promise.resolve(p).catch(() => d), resource: (p) => '/luci-static/resources/' + p },
 		E, _: (s) => s
@@ -218,7 +219,8 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const acl = JSON.parse(fs.readFileSync(path.join(ROOT, 'root/usr/share/rpcd/acl.d/luci-app-apmond.json')))['luci-app-apmond'].read.file;
 	const st2 = loadView('status', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
 	const lg = loadView('log', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
-	await st2.fetchStatus(); await lg.fetchLog();
+	const vv = loadView('version', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
+	await st2.fetchStatus(); await lg.fetchLog(); await vv.fetchApmondVersion();
 	calls.forEach((c) => assert.ok(acl[c] && acl[c].includes('exec'), 'not in ACL: ' + c));
 	assert.strictEqual(Object.keys(acl).length, new Set(calls).size); ok('acl: every command the views run is allowed, and nothing else (' + [ ...new Set(calls) ].join(', ') + ')');
 
@@ -248,7 +250,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 		opts.length = 0;
 		const sv2 = loadView('settings', { form: fakeForm, dom: fakeDom, view: fakeView, uci: { get: () => seed, load: () => Promise.resolve() } });
 		const node = await sv2.render();
-		assert.strictEqual(node.children.length, 2);
+		assert.strictEqual(node.children.length, 3);
 		assert.strictEqual(noticeOf(node).length, seed ? 0 : 1);
 		if (!seed) {
 			const t = text(noticeOf(node)[0]);
@@ -284,6 +286,51 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	dl.cfgvalue = () => undefined; assert.strictEqual(dl.write('setup', '1'), undefined);
 	dl.cfgvalue = () => '3'; dl.write('setup', '1'); assert.strictEqual(removed, 1);
 	assert.strictEqual(dl.write('setup', '2'), 'written'); ok('settings: choosing a default leaves the option unset (or removes it)');
+
+	// Version: luci-app-apmond's own version strings, the installed apmond version (apmond -v), the page footer
+	const ver = loadView('version');
+	const vsrc = fs.readFileSync(path.join(VIEWS, 'version.js'), 'utf8');
+	assert.ok(/^var last_version = '[^']+';$/m.test(vsrc) && /^var version = '[^']+';$/m.test(vsrc)); ok('version: last_version and version are one line each in version.js');
+	assert.strictEqual(ver.version, '1.0.1~be7a'); assert.strictEqual(ver.last_version, '1.0.0'); ok('version: 1.0.1~be7a, previous 1.0.0');
+	const vre = /^\d+\.\d+\.\d+(~be7a)?$/;
+	assert.ok(vre.test(ver.version) && vre.test(ver.last_version)); ok('version: x.y.z or x.y.z~be7a, as apmond and mesh11sd');
+	const vnum = (v) => v.replace('~be7a', '').split('.').map(Number);
+	const cmpv = (a, b) => { for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0; };
+	assert.ok(cmpv(vnum(ver.version), vnum(ver.last_version)) > 0); ok('version: newer than last_version');
+	const head = fs.readFileSync(path.join(ROOT, 'ChangeLog'), 'utf8').split('\n')[0];
+	assert.strictEqual(head, 'luci-app-apmond (' + ver.version + ')'); ok('version: ChangeLog heading matches (' + head + ')');
+	assert.strictEqual(ver.parseApmondVersion('apmond version 1.0.1~be7a\n'), '1.0.1~be7a');
+	assert.strictEqual(ver.parseApmondVersion('apmond version 1.0.2'), '1.0.2'); ok('version: apmond -v output parsed');
+	const unknown100 = 'Unknown option [ -v ]\n\n  Usage: apmond [option] [argument...]\n\n  option: version\n\tPrint the version of apmond\n';
+	[ '', null, undefined, unknown100, 'garbage' ].forEach((x) => assert.strictEqual(ver.parseApmondVersion(x), null)); ok('version: apmond 1.0.0 (no -v), empty or failed output gives null');
+	const vcalls = [];
+	const vok = loadView('version', { fs: { exec_direct: (cmd, args) => { vcalls.push(cmd + ' ' + args.join(' ')); return Promise.resolve('apmond version 1.0.1~be7a\n'); } } });
+	assert.strictEqual(await vok.fetchApmondVersion(), '1.0.1~be7a'); assert.deepStrictEqual(vcalls, [ '/usr/sbin/apmond -v' ]); ok('version: installed apmond version read with "apmond -v"');
+	const vfail = loadView('version', { fs: { exec_direct: () => Promise.reject(new Error('exit 1')) } });
+	assert.strictEqual(await vfail.fetchApmondVersion(), null);
+	const v100 = loadView('version', { fs: { exec_direct: () => Promise.resolve(unknown100) } });
+	assert.strictEqual(await v100.fetchApmondVersion(), null); ok('version: a failed or 1.0.0 -v call resolves to null, no throw');
+	assert.strictEqual(ver.footerText(), 'luci-app-apmond 1.0.1~be7a');
+	assert.strictEqual(ver.footerText('1.0.1~be7a'), 'luci-app-apmond 1.0.1~be7a, apmond 1.0.1~be7a');
+	assert.strictEqual(ver.footerText(null), 'luci-app-apmond 1.0.1~be7a, apmond unknown'); ok('version: footer text, apmond unknown when it cannot be read');
+	const tick = () => new Promise((r) => setTimeout(r, 0));
+	for (const [ fsFake, want ] of [ [ vok, 'apmond 1.0.1~be7a' ], [ v100, 'apmond unknown' ], [ vfail, 'apmond unknown' ] ]) {
+		const fv = loadView('version', { fs: { exec_direct: (c, a) => fsFake === vok ? Promise.resolve('apmond version 1.0.1~be7a\n') : fsFake === v100 ? Promise.resolve(unknown100) : Promise.reject(new Error('x')) }, dom: fakeDom });
+		const f = fv.footer();
+		assert.strictEqual(f.attrs['class'], 'apmond-version'); assert.strictEqual(text(f), 'luci-app-apmond 1.0.1~be7a');
+		await tick(); await tick();
+		assert.strictEqual(text(f), 'luci-app-apmond 1.0.1~be7a, ' + want);
+	}
+	ok('version: footer filled in with the apmond version, or unknown');
+	const hasFooter = (n) => find(n, 'div').some((d) => d.attrs && d.attrs['class'] === 'apmond-version');
+	const fakeFs = { exec_direct: () => Promise.resolve('') };
+	assert.ok(hasFooter(loadView('status', { fs: fakeFs }).render(''))); ok('version: footer on the Status page');
+	assert.ok(hasFooter(loadView('accesspoints', { fs: fakeFs }).render({ collector: false, nodes: [] }))); ok('version: footer on the Access points page');
+	assert.ok(hasFooter(loadView('log', { fs: fakeFs, ui: { createHandlerFn: () => null } }).render(''))); ok('version: footer on the Log page');
+	opts.length = 0;
+	const svf = await loadView('settings', { form: fakeForm, dom: fakeDom, view: fakeView, uci: { get: () => 'x', load: () => Promise.resolve() } }).render();
+	assert.ok(hasFooter(svf)); ok('version: footer on the Settings page');
+	assert.ok(!fs.readFileSync(path.join(ROOT, 'root/usr/share/luci/menu.d/luci-app-apmond.json'), 'utf8').includes('apmond/version')); ok('version: version.js is a module, not a menu page');
 
 	console.log('\nResult: ' + pass + ' passed');
 })().catch((e) => { console.error('FAIL:', e.message); process.exit(1); });

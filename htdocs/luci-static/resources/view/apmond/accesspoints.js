@@ -4,6 +4,7 @@
 'require ui';
 'require poll';
 'require dom';
+'require view.apmond.version as apmondver';
 
 /*
  * ApmonD access points.
@@ -445,7 +446,8 @@ return view.extend({
 		return E('div', { 'class': 'cbi-map' }, [
 			E('h2', {}, [ _('ApmonD Access Points') ]),
 			E('div', { 'class': 'cbi-map-descr' }, [ _('Refreshed every 30 seconds.') ]),
-			box
+			box,
+			apmondver.footer()
 		]);
 	},
 

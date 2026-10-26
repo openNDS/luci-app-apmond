@@ -4,6 +4,7 @@
 'require ui';
 'require poll';
 'require dom';
+'require view.apmond.version as apmondver';
 
 /*
  * ApmonD status: "apmond status" prints JSON, { "apmond_status": { key: value, ... } }.
@@ -223,7 +224,8 @@ return view.extend({
 		return E('div', { 'class': 'cbi-map' }, [
 			E('h2', {}, [ _('ApmonD Status') ]),
 			E('div', { 'class': 'cbi-map-descr' }, [ _('The output of "apmond status", refreshed every 10 seconds.') ]),
-			box
+			box,
+			apmondver.footer()
 		]);
 	},
 

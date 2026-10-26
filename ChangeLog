@@ -1,3 +1,8 @@
+luci-app-apmond (1.0.1~be7a)
+  * Add - version and last_version in one place (view/apmond/version.js), shown at the foot of each ApmonD page with the installed apmond version from apmond -v, unknown if apmond has no -v [bluewavenet]
+
+ -- Rob White <dot@blue-wave.net>  Mon, 26 Oct 2026 22:26:50 +0000
+
 luci-app-apmond (1.0.0)
   * Add - Settings page for the apmond setup section, General and Advanced tabs, every option optional [bluewavenet]
   * Add - built-in defaults shown as placeholders, an option is only written when it is changed [bluewavenet]
