@@ -1,0 +1,89 @@
+{
+  "System@02:00:00:0a:00:00": {
+    "Distribution": "unknown",
+    "Release": "unknown",
+    "Revision": "unknown",
+    "Target": "unknown",
+    "Architecture": "unknown",
+    "Description": "unknown",
+    "Device": "unknown",
+    "phy": {},
+    "node_status": {
+      "apmond_version": "1.0.0",
+      "apmond_protocol": "1",
+      "apmond_checksum": "afe183378a21f9f4a6262e271bdeba361e6607b1eb79a3b1518b148cf2ed5f57",
+      "factory_mac": "unknown",
+      "device_mac": "02:00:00:0a:00:00",
+      "uptime_seconds": 49939,
+      "load_average_1min": "0.49",
+      "load_average_5min": "0.28",
+      "load_average_15min": "0.28",
+      "free_ram_kb": 3533976,
+      "free_flash_kb": 122364760,
+      "cpu_temperature_c": "not available",
+      "cpu_frequency_mhz": "none scaling"
+    },
+    "clients@02:00:00:0a:00:00": {
+      "OpenWrt@phy0-ap0": {
+        "02:00:00:00:00:01": {
+          "rx_bytes": "1000",
+          "tx_bytes": "2000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "10_seconds",
+          "timestamp": "1792956158123_ms",
+          "date_time": "Sun_Oct_25_19:22:38_GMT_2026"
+        },
+        "02:00:00:00:00:02": {
+          "rx_bytes": "2000",
+          "tx_bytes": "4000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "20_seconds",
+          "timestamp": "1792956158123_ms",
+          "date_time": "Sun_Oct_25_19:22:38_GMT_2026"
+        }
+      },
+      "OpenWrt5@phy1-ap0": {
+        "02:00:00:00:00:01": {
+          "rx_bytes": "1000",
+          "tx_bytes": "2000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "10_seconds",
+          "timestamp": "1792956158123_ms",
+          "date_time": "Sun_Oct_25_19:22:38_GMT_2026"
+        }
+      },
+      "apmdum0@apmbr0": {
+        "2e:03:91:49:4f:4a": {
+          "rx_bytes": "866",
+          "tx_bytes": "1866",
+          "rx_bitrate": "10000",
+          "tx_bitrate": "10000",
+          "stats_scope": "port",
+          "timestamp": "1792956159000",
+          "date_time": "Sun_Oct_25_19:22:39_GMT_2026"
+        },
+        "02:aa:bb:cc:dd:01": {
+          "rx_bytes": "866",
+          "tx_bytes": "1866",
+          "rx_bitrate": "10000",
+          "tx_bitrate": "10000",
+          "stats_scope": "port",
+          "timestamp": "1792956159000",
+          "date_time": "Sun_Oct_25_19:22:39_GMT_2026"
+        }
+      }
+    }
+  }
+}

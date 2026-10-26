@@ -1,0 +1,19 @@
+luci-app-apmond (1.0.0)
+  * Add - Settings page for the apmond setup section, General and Advanced tabs, every option optional [bluewavenet]
+  * Add - built-in defaults shown as placeholders, an option is only written when it is changed [bluewavenet]
+  * Add - notice while apmon_seed is unset and the built-in default passphrase is in use, updated on save [bluewavenet]
+  * Add - Status page, apmond status JSON as a table, refreshed every 10 seconds [bluewavenet]
+  * Add - status warnings for checksum mismatch, storage fallback, logging disabled, protocol mismatch and daemon not running, default passphrase as a plain note [bluewavenet]
+  * Add - Access points page, show_ap_data all on the collector, one row per access point with its clients [bluewavenet]
+  * Add - client tables with SSID@interface or port@bridge, vlan, signal, bitrates, bytes and connected time, wired byte counts marked per port [bluewavenet]
+  * Add - fixed column widths, so the client tables of every access point line up [bluewavenet]
+  * Add - LuCI signal icon and dBm in the client Signal column, per antenna values in the tooltip, same thresholds as the LuCI wireless status [bluewavenet]
+  * Add - peers fall back to get_ap_data and show only their own report [bluewavenet]
+  * Add - on a node without reports, say whether it is the collector, and on a peer give the collector address with a link to its Access points page in a new window [bluewavenet]
+  * Add - explain an empty report on a node with no clients connected [bluewavenet]
+  * Add - Log page, apmond read_log with a refresh button [bluewavenet]
+  * Add - rpcd ACL allows only apmond status, show_ap_data all, get_ap_data and read_log, no ucode, Lua or rpcd plugin [bluewavenet]
+  * Add - view tests against real apmond output, run with node [bluewavenet]
+  * Add - feed Makefile in linux_openwrt/luci-app-apmond that downloads the release from GitHub, as apmond does, so the source stays in this repository [bluewavenet]
+
+ -- Rob White <dot@blue-wave.net>  Mon, 26 Oct 2026 09:31:00 +0000

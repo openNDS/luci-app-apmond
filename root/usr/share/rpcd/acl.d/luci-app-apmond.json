@@ -1,0 +1,18 @@
+{
+	"luci-app-apmond": {
+		"description": "Grant access to ApmonD settings, status, access point data and log",
+		"read": {
+			"cgi-io": [ "exec" ],
+			"file": {
+				"/usr/sbin/apmond status": [ "exec" ],
+				"/usr/sbin/apmond show_ap_data all": [ "exec" ],
+				"/usr/sbin/apmond get_ap_data": [ "exec" ],
+				"/usr/sbin/apmond read_log": [ "exec" ]
+			},
+			"uci": [ "apmond" ]
+		},
+		"write": {
+			"uci": [ "apmond" ]
+		}
+	}
+}
