@@ -403,6 +403,13 @@ return view.extend({
 	},
 
 	renderData: function(data) {
+		if (!data.nodes.length && !data.collector && data.role)
+			return E('div', {}, [
+				this.peerNote(data),
+				E('div', { 'class': 'alert-message warning' },
+					_('No access point data for this node yet. apmond get_ap_data returned nothing.'))
+			]);
+
 		if (!data.nodes.length)
 			return E('div', { 'class': 'alert-message warning' },
 				_('No access point data. Is apmond installed and running?'));

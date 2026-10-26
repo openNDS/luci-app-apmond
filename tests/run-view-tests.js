@@ -212,6 +212,8 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	assert.ok(text(rn).includes('This node is the collector.') && find(rn, 'a').length === 0); ok('ap: collector with no reports yet, no link');
 	assert.ok(text(ap.renderData(Object.assign({}, d, { role: '', collector_ula: '' }))).includes('Not a collector, or')); ok('ap: unknown role, generic note');
 	assert.ok(text(ap.renderData({ collector: false, nodes: [] })).includes('No access point data')); ok('ap: no data message');
+	const en = ap.renderData({ collector: false, nodes: [], role: 'peer', collector_ula: 'fd18:cef4:6dbd:baa0::1' });
+	assert.ok(text(en).includes('Not a collector.') && find(en, 'a').length === 1 && text(en).includes('returned nothing')); ok('ap: peer with no own data still gets the notice and link');
 	const acl = JSON.parse(fs.readFileSync(path.join(ROOT, 'root/usr/share/rpcd/acl.d/luci-app-apmond.json')))['luci-app-apmond'].read.file;
 	const st2 = loadView('status', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
 	const lg = loadView('log', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
