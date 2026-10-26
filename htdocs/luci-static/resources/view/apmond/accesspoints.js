@@ -332,8 +332,9 @@ return view.extend({
 
 	/*
 	 * Fetch the data: show_ap_data all on the collector; when that gives no access points
-	 * (a peer, or nothing received yet) get_ap_data for this node only.
-	 * Resolves to { collector: bool, nodes: [ ... ] }.
+	 * (a peer, or nothing received yet) get_ap_data for this node only, plus apmond status for
+	 * this node's role and the collector address.
+	 * Resolves to { collector: bool, nodes: [ ... ], role: string, collector_ula: string }.
 	 */
 	fetchData: function() {
 		var self = this;
@@ -344,26 +345,76 @@ return view.extend({
 			if (nodes.length)
 				return { collector: true, nodes: nodes };
 
-			return L.resolveDefault(fs.exec_direct(APMOND, [ 'get_ap_data' ]), null).then(function(own) {
-				return { collector: false, nodes: self.parseNodes(self.parseJSON(own)) };
+			return Promise.all([
+				L.resolveDefault(fs.exec_direct(APMOND, [ 'get_ap_data' ]), null),
+				L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null)
+			]).then(function(res) {
+				var st = self.parseJSON(res[1]);
+
+				st = (st && st.apmond_status) || {};
+
+				return {
+					collector: false,
+					nodes: self.parseNodes(self.parseJSON(res[0])),
+					role: st.role || '',
+					collector_ula: st.collector || ''
+				};
 			});
 		});
 	},
 
-	renderData: function(data) {
-		var note;
+	/* the Access points page on the collector, by its ULA, in the scheme this page was loaded with */
+	collectorURL: function(ula) {
+		var proto = (typeof window != 'undefined' && window.location && window.location.protocol) || 'https:',
+		    path = (L.url ? L.url('admin/services/apmond/accesspoints') : '/cgi-bin/luci/admin/services/apmond/accesspoints');
 
+		return proto + '//[' + ula + ']' + path;
+	},
+
+	/* the note above the table on a node that holds no reports */
+	peerNote: function(data) {
+		var link = null, lead, rest;
+
+		if (data.collector_ula) {
+			var url = this.collectorURL(data.collector_ula);
+			link = E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener' }, [ url ]);
+		}
+
+		if (data.role == 'router') {
+			lead = _('This node is the collector.');
+			rest = _('No access point reports have been received yet, so only this node is shown.');
+			link = null;
+		}
+		else if (data.role == 'peer' || data.role == 'backed-off') {
+			lead = _('Not a collector.');
+			rest = data.collector_ula
+				? _('This node reports to the collector at %s, which has the full list of access points. Only this node is shown here.').format(data.collector_ula)
+				: _('This node reports to the collector, which has the full list of access points. Only this node is shown here.');
+		}
+		else {
+			lead = _('Not a collector, or the collector has not received any reports yet.');
+			rest = _('Only this node is shown. The full list of access points is on the collector (the router).');
+		}
+
+		return E('div', { 'class': 'alert-message notice' }, [
+			E('p', {}, [ E('strong', {}, [ lead ]), ' ', rest ]),
+			link ? E('p', {}, [ _('Open the collector\'s Access points page:') + ' ', link ]) : ''
+		]);
+	},
+
+	renderData: function(data) {
 		if (!data.nodes.length)
 			return E('div', { 'class': 'alert-message warning' },
 				_('No access point data. Is apmond installed and running?'));
 
 		if (data.collector)
-			note = _('Access points that have reported to this node, the collector. Click "Show clients" to see the clients of an access point.');
-		else
-			note = _('This node is not the collector, or the collector has not received any reports yet, so only this node is shown. The full list of access points is on the collector (the router).');
+			return E('div', {}, [
+				E('p', {}, [ _('Access points that have reported to this node, the collector. Click "Show clients" to see the clients of an access point.') ]),
+				this.renderNodes(data.nodes)
+			]);
 
 		return E('div', {}, [
-			E('p', {}, [ note ]),
+			this.peerNote(data),
 			this.renderNodes(data.nodes)
 		]);
 	},

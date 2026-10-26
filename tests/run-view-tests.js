@@ -195,11 +195,21 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const calls = [];
 	const mk = (answers) => loadView('accesspoints', { fs: { exec_direct: (cmd, args) => {
 		calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(answers[args[0]]); } } });
+	const peerStatus = sample('status_peer.json');
 	let d = await mk({ show_ap_data: sample('show_ap_data_all.json') }).fetchData();
 	assert.ok(d.collector && d.nodes.length === 2); ok('ap: fetchData on the collector');
-	d = await mk({ show_ap_data: '', get_ap_data: sample('get_ap_data_peer.json') }).fetchData();
+	d = await mk({ show_ap_data: '', get_ap_data: sample('get_ap_data_peer.json'), status: peerStatus }).fetchData();
 	assert.ok(!d.collector && d.nodes.length === 1); ok('ap: fetchData on a peer falls back to get_ap_data');
-	assert.ok(text(ap.renderData(d)).includes('not the collector')); ok('ap: peer note shown');
+	assert.ok(calls.includes('/usr/sbin/apmond status')); ok('ap: peer fallback reads apmond status');
+	assert.strictEqual(d.collector_ula, 'fd18:cef4:6dbd:baa0::1'); ok('ap: collector ULA from status');
+	const pn = ap.renderData(Object.assign({}, d, { role: 'peer' }));
+	assert.ok(text(pn).includes('Not a collector.') && text(pn).includes('fd18:cef4:6dbd:baa0::1')); ok('ap: peer note says not a collector and names the collector');
+	const a = find(pn, 'a')[0];
+	assert.strictEqual(a.attrs.href, 'https://[fd18:cef4:6dbd:baa0::1]/cgi-bin/luci/admin/services/apmond/accesspoints'); ok('ap: link to the collector Access points page');
+	assert.ok(find(ap.renderData(Object.assign({}, d, { role: 'backed-off' })), 'a').length === 1); ok('ap: backed-off router gets the link too');
+	const rn = ap.renderData(Object.assign({}, d, { role: 'router' }));
+	assert.ok(text(rn).includes('This node is the collector.') && find(rn, 'a').length === 0); ok('ap: collector with no reports yet, no link');
+	assert.ok(text(ap.renderData(Object.assign({}, d, { role: '', collector_ula: '' }))).includes('Not a collector, or')); ok('ap: unknown role, generic note');
 	assert.ok(text(ap.renderData({ collector: false, nodes: [] })).includes('No access point data')); ok('ap: no data message');
 	const acl = JSON.parse(fs.readFileSync(path.join(ROOT, 'root/usr/share/rpcd/acl.d/luci-app-apmond.json')))['luci-app-apmond'].read.file;
 	const st2 = loadView('status', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
