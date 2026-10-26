@@ -2,8 +2,10 @@
 
 LuCI app for [ApmonD](https://github.com/openNDS/apmond), the access point monitoring daemon for OpenWrt.
 
-The repository is laid out exactly as `applications/luci-app-apmond/` in the
-[openwrt/luci](https://github.com/openwrt/luci) feed, so it can be copied there unchanged.
+The source stays in this repository. The [openwrt/luci](https://github.com/openwrt/luci) feed
+carries only `applications/luci-app-apmond/Makefile`, a copy of
+`linux_openwrt/luci-app-apmond/Makefile` with the release hash, which downloads the tagged release
+from GitHub and installs from it, as the [apmond](https://github.com/openNDS/apmond) package does.
 
 ## Pages
 
@@ -37,16 +39,37 @@ standard `form.Map('apmond')`, and the other pages run `/usr/sbin/apmond` with
 
 ## Building
 
-Copy (do not symlink) the repository to `feeds/luci/applications/luci-app-apmond` in an OpenWrt
-build tree or SDK, then select and build it as usual:
+`linux_openwrt/luci-app-apmond/Makefile` is the feed Makefile (a template: `PKG_HASH` is filled in
+for each release). It does not use `luci.mk`, because `luci.mk` packages the files next to the
+Makefile; it does the same things for this app (LuCI > 3. Applications, depends on luci-base,
+JavaScript minified when `CONFIG_LUCI_JSMIN` is set, LuCI cache cleared and rpcd reloaded on install).
+
+To build a release, put the Makefile with the release hash at
+`feeds/luci/applications/luci-app-apmond/Makefile` in an OpenWrt build tree or SDK, then:
 
     make package/luci-app-apmond/compile
+
+To build the current checkout instead of a release, use a package directory containing only the
+Makefile and a `git-src` symlink to this repository's `.git`, with `CONFIG_SRC_TREE_OVERRIDE=y`
+(Advanced configuration options > Enable package source tree override). The committed tree at HEAD
+is built.
+
+## Layout
+
+```
+htdocs/luci-static/resources/view/apmond/  # The four views
+root/usr/share/luci/menu.d/                # Menu entry, Services > ApmonD
+root/usr/share/rpcd/acl.d/                 # rpcd ACL
+po/templates/apmond.pot                    # Translation template
+linux_openwrt/luci-app-apmond/Makefile     # OpenWrt package Makefile (feed template)
+tests/                                     # View tests, run with node (not installed)
+```
 
 ## Tests
 
 `node tests/run-view-tests.js` loads the views with small stand-ins for the LuCI runtime and runs
 their parsing and rendering code against real apmond output in `tests/samples`. The `tests`
-directory is not installed and is not needed in the luci feed.
+directory is not installed.
 
 ## Translations
 

@@ -14,5 +14,6 @@ luci-app-apmond (1.0.0)
   * Add - Log page, apmond read_log with a refresh button [bluewavenet]
   * Add - rpcd ACL allows only apmond status, show_ap_data all, get_ap_data and read_log, no ucode, Lua or rpcd plugin [bluewavenet]
   * Add - view tests against real apmond output, run with node [bluewavenet]
+  * Add - feed Makefile in linux_openwrt/luci-app-apmond that downloads the release from GitHub, as apmond does, so the source stays in this repository [bluewavenet]
 
  -- Rob White <dot@blue-wave.net>  Mon, 26 Oct 2026 09:31:00 +0000
