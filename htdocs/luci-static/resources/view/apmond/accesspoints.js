@@ -388,8 +388,10 @@ return view.extend({
 		else if (data.role == 'peer' || data.role == 'backed-off') {
 			lead = _('Not a collector.');
 			rest = data.collector_ula
-				? _('This node reports to the collector at %s, which has the full list of access points. Only this node is shown here.').format(data.collector_ula)
-				: _('This node reports to the collector, which has the full list of access points. Only this node is shown here.');
+				? _('This node reports to the collector at %s, which has the full list of access points.').format(data.collector_ula)
+				: _('This node reports to the collector, which has the full list of access points.');
+			if (data.nodes && data.nodes.length)
+				rest += ' ' + _('Only this node is shown here.');
 		}
 		else {
 			lead = _('Not a collector, or the collector has not received any reports yet.');

@@ -214,6 +214,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	assert.ok(text(ap.renderData({ collector: false, nodes: [] })).includes('No access point data')); ok('ap: no data message');
 	const en = ap.renderData({ collector: false, nodes: [], role: 'peer', collector_ula: 'fd18:cef4:6dbd:baa0::1' });
 	assert.ok(text(en).includes('Not a collector.') && find(en, 'a').length === 1 && text(en).includes('no clients connected')); ok('ap: peer with no own data still gets the notice and link');
+	assert.ok(!text(en).includes('Only this node is shown') && text(pn).includes('Only this node is shown')); ok('ap: "only this node" only when this node is shown');
 	const acl = JSON.parse(fs.readFileSync(path.join(ROOT, 'root/usr/share/rpcd/acl.d/luci-app-apmond.json')))['luci-app-apmond'].read.file;
 	const st2 = loadView('status', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
 	const lg = loadView('log', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
