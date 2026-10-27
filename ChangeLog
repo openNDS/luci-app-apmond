@@ -1,3 +1,11 @@
+luci-app-apmond (1.0.1)
+  * Add - version and last_version in one place (view/apmond/version.js), shown at the foot of each ApmonD page with the installed apmond version from apmond -v, unknown if apmond has no -v [bluewavenet]
+  * Add - Access points: ULA and IPv4 address columns for each AP, the ULA links to that AP's Access points page in a new window, older apmond and mesh11sd APs show - with no link [bluewavenet]
+  * Fix - Access points: this node's own ULA is plain text, not a link that opens this page again, found from node_ula and ap_mac_id in apmond status, read once when the page loads [bluewavenet]
+  * Fix - Access points: wider Clients column and column titles wrap only between words, so Clients no longer shows as Client s [bluewavenet]
+
+ -- Rob White <dot@blue-wave.net>  Tue, 27 Oct 2026 21:14:07 +0000
+
 luci-app-apmond (1.0.0)
   * Add - Settings page for the apmond setup section, General and Advanced tabs, every option optional [bluewavenet]
   * Add - built-in defaults shown as placeholders, an option is only written when it is changed [bluewavenet]

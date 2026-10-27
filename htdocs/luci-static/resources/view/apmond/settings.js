@@ -3,6 +3,7 @@
 'require form';
 'require uci';
 'require dom';
+'require view.apmond.version as apmondver';
 
 /*
  * ApmonD settings: the single "config apmond 'setup'" section of /etc/config/apmond.
@@ -158,7 +159,7 @@ return view.extend({
 			/* the notice lives outside the map, which re-renders its own contents on save */
 			self.noticeSlot = E('div', {});
 			self.updateSeedNotice();
-			return E('div', {}, [ self.noticeSlot, node ]);
+			return E('div', {}, [ self.noticeSlot, node, apmondver.footer() ]);
 		});
 	},
 

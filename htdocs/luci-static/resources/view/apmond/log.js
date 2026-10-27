@@ -3,6 +3,7 @@
 'require fs';
 'require ui';
 'require dom';
+'require view.apmond.version as apmondver';
 
 /* ApmonD log: the output of "apmond read_log" (exits 1 with no output when there is no log file yet) */
 
@@ -45,7 +46,8 @@ return view.extend({
 					})
 				}, [ _('Refresh') ])
 			]),
-			pre
+			pre,
+			apmondver.footer()
 		]);
 	},
 

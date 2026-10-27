@@ -38,7 +38,8 @@ function find(n, tag, out) {
 function loadView(name, fakes) {
 	const src = fs.readFileSync(path.join(VIEWS, name + '.js'), 'utf8');
 	const env = Object.assign({
-		view: { extend: (o) => o },
+		view: { extend: (o) => o }, baseclass: { extend: (o) => o },
+		apmondver: name === 'version' ? undefined : loadView('version', { fs: { exec_direct: () => Promise.resolve('apmond version 1.0.1~be7a\n') } }),
 		form: {}, fs: {}, ui: {}, poll: { add: () => {} }, dom: { content: () => {} }, uci: {},
 		L: { resolveDefault: (p, d) => Promise.resolve(p).catch(() => d), resource: (p) => '/luci-static/resources/' + p },
 		E, _: (s) => s
@@ -140,8 +141,52 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	assert.strictEqual(widthsOf(ctabs[0]).reduce((a, b) => a + +b, 0), 100);
 	ctabs.forEach((x) => x.children.slice(1).forEach((row) => assert.deepStrictEqual(widthsOf({ children: [ row ] }), widthsOf(ctabs[0]))));
 	ok('ap: client tables of both nodes use identical fixed column widths summing to 100%');
-	assert.ok(/table-layout:fixed/.test(t.attrs.style) && widthsOf(t).length === 8 && widthsOf(t).reduce((a, b) => a + +b, 0) === 100);
+	assert.ok(/table-layout:fixed/.test(t.attrs.style) && widthsOf(t).length === 10 && widthsOf(t).reduce((a, b) => a + +b, 0) === 100);
 	ok('ap: node table has fixed column widths summing to 100%');
+	const dtd = find(t, 'td').filter((c) => c.attrs.colspan);
+	assert.ok(dtd.length === 2 && dtd.every((c) => c.attrs.colspan === '10')); ok('ap: client table row spans all 10 node columns');
+
+	// node addresses (apmond 1.0.1): node_ula and ipv4_addresses right after device_mac
+	const titles = t.children[0].children.map(text);
+	assert.deepStrictEqual(titles.slice(0, 5), [ 'Device', 'MAC address', 'ULA', 'IPv4 address', 'Release' ]); ok('ap: ULA and IPv4 address columns after MAC address');
+	// older APs (the apmond 1.0.0 sample has no node_ula / ipv4_addresses): "-" and no link
+	assert.ok(nodes.every((n) => n.ula === null && Array.isArray(n.ipv4) && n.ipv4.length === 0));
+	assert.strictEqual(find(t, 'a').length, 0);
+	const oldRow = t.children[1];
+	assert.ok(text(oldRow.children[2]) === '-' && text(oldRow.children[3]) === '-'); ok('ap: older AP report: ULA and IPv4 show -, no link');
+	const na = ap.parseNodes(ap.parseJSON(sample('show_ap_data_addresses.json')));
+	const nc = na.find((n) => n.mac === '02:00:00:0a:00:00'), nr = na.find((n) => n.mac === '02:00:00:0a:00:01');
+	assert.strictEqual(nc.ula, 'fd18:cef4:6dbd:baa0:200:ff:fe0a:0');
+	assert.deepStrictEqual(nc.ipv4, [ '192.168.1.2/24', '10.10.0.2/16' ]);
+	assert.strictEqual(nr.ula, 'fd18:cef4:6dbd:baa0:200:ff:fe0a:1');
+	assert.deepStrictEqual(nr.ipv4, []); ok('ap: apmond 1.0.1 report: node_ula and ipv4_addresses parsed');
+	const tn = ap.renderNodes(na);
+	const links = find(tn, 'a');
+	assert.strictEqual(links.length, 2);
+	const lc = links.find((x) => text(x) === nc.ula);
+	assert.strictEqual(lc.attrs.href, 'https://[fd18:cef4:6dbd:baa0:200:ff:fe0a:0]/cgi-bin/luci/admin/services/apmond/accesspoints');
+	assert.ok(lc.attrs.target === '_blank' && lc.attrs.rel === 'noopener' && lc.attrs.title === lc.attrs.href);
+	ok('ap: ULA links to the AP\'s Access points page in a new window, as the peer note links to the collector');
+	assert.strictEqual(ap.nodeURL('fd18:cef4:6dbd:baa0::1'), ap.collectorURL('fd18:cef4:6dbd:baa0::1')); ok('ap: AP and collector links use the same URL form');
+	const rowC = tn.children.slice(1).find((r) => r.children && text(r.children[1]) === nc.mac);
+	assert.strictEqual(text(rowC.children[3]), '192.168.1.2/24  10.10.0.2/16');
+	assert.strictEqual(find(rowC.children[3], 'br').length, 1);
+	const rowR = tn.children.slice(1).find((r) => r.children && text(r.children[1]) === nr.mac);
+	assert.strictEqual(text(rowR.children[3]), '-'); ok('ap: IPv4 addresses one per line, - when the AP has none');
+	// a mesh11sd AP (mesh11sd node_status: mesh_bridge_mac, no node_ula) mixed with apmond APs
+	const mixedAll = JSON.parse(sample('show_ap_data_addresses.json'));
+	mixedAll['System@02:00:00:0b:00:00'] = { Device: 'mesh11sd AP', node_status: { mesh11sd_version: '7.3.1', mesh_bridge_mac: '02:00:00:0b:00:00', uptime_seconds: 5 } };
+	const nm = ap.parseNodes(mixedAll);
+	const m11 = nm.find((n) => n.mac === '02:00:00:0b:00:00');
+	assert.ok(nm.length === 3 && m11.ula === null && m11.ipv4.length === 0);
+	assert.strictEqual(find(ap.renderNodes(nm), 'a').length, 2); ok('ap: mesh11sd AP: - and no link, apmond APs still linked');
+	// only a real ULA becomes a link, never anything else a report might carry
+	[ 'unknown', '', null, 'javascript:alert(1)', 'fe80::1', '2001:db8::1', 'fd00::1"><b', 'fd00::1/64', 42, [ 'fd00::1' ] ]
+		.forEach((v) => assert.strictEqual(ap.parseULA(v), null, String(v)));
+	assert.strictEqual(ap.parseULA('FD18:CEF4::1'), 'fd18:cef4::1');
+	assert.deepStrictEqual(ap.parseIPv4('192.168.1.2/24'), []);
+	assert.deepStrictEqual(ap.parseIPv4([ '192.168.1.2', '10.0.0.1/8', 'x', '1.2.3.4/24"><b', null ]), [ '192.168.1.2', '10.0.0.1/8' ]);
+	ok('ap: node_ula must be a ULA and ipv4_addresses dotted quads, anything else gives - and no link');
 	const mixed = ap.renderClients({ clients: [ wl, wd ] });
 	assert.ok(mixed.children.slice(1).every((row) => row.children.every((c) => /overflow-wrap:anywhere/.test(c.attrs.style) && c.attrs['data-title'])));
 	ok('ap: client cells wrap long values and carry data-title labels for the mobile layout');
@@ -215,10 +260,101 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const en = ap.renderData({ collector: false, nodes: [], role: 'peer', collector_ula: 'fd18:cef4:6dbd:baa0::1' });
 	assert.ok(text(en).includes('Not a collector.') && find(en, 'a').length === 1 && text(en).includes('no clients connected')); ok('ap: peer with no own data still gets the notice and link');
 	assert.ok(!text(en).includes('Only this node is shown') && text(pn).includes('Only this node is shown')); ok('ap: "only this node" only when this node is shown');
+
+	// own row: this node's ULA is plain text, other nodes' ULAs stay links
+	const routerStatus = sample('status_router.json');
+	const addrAll = sample('show_ap_data_addresses.json');
+	const ulaLinks = (tbl) => find(tbl, 'a').map(text);
+
+	// collector: status_router.json is the 02:00:00:0a:00:01 node of show_ap_data_addresses.json
+	d = await mk({ show_ap_data: addrAll, status: routerStatus }).fetchData();
+	assert.ok(d.collector && d.nodes.length === 2);
+	const ownC = d.nodes.find((n) => n.own);
+	assert.strictEqual(ownC.mac, '02:00:00:0a:00:01');
+	assert.strictEqual(d.nodes.filter((n) => n.own).length, 1);
+	ok('ap: collector marks its own row from node_ula / ap_mac_id in apmond status');
+
+	const tc = ap.renderData(d);
+	assert.deepStrictEqual(ulaLinks(tc), [ 'fd18:cef4:6dbd:baa0:200:ff:fe0a:0' ]);
+	const ownRow = find(tc, 'tr').find((r) => r.children.length > 1 && text(r.children[1]) === ownC.mac);
+	assert.strictEqual(text(ownRow.children[2]), ownC.ula);
+	assert.strictEqual(find(ownRow.children[2], 'a').length, 0);
+	ok('ap: collector own row shows its ULA as plain text, the other AP is still a link');
+
+	// own row found by MAC alone (upper case), and by ULA alone
+	assert.ok(ap.isOwnNode({ mac: '02:00:00:0a:00:01', ula: null }, { ap_mac_id: '02:00:00:0A:00:01' }));
+	assert.ok(ap.isOwnNode({ mac: 'x', ula: 'fd18:cef4:6dbd:baa0:200:ff:fe0a:1' }, { node_ula: 'FD18:CEF4:6DBD:BAA0:200:FF:FE0A:1' }));
+	assert.ok(!ap.isOwnNode({ mac: '02:00:00:0a:00:00', ula: null }, { ap_mac_id: '02:00:00:0a:00:01', node_ula: 'unknown' }));
+	assert.ok(!ap.isOwnNode({ mac: '', ula: null }, {}));
+	ok('ap: own node matched by MAC or ULA, an empty or unknown status matches nothing');
+
+	// collector with no status output: no row is marked, every ULA stays a link
+	d = await mk({ show_ap_data: addrAll }).fetchData();
+	assert.ok(d.nodes.every((n) => !n.own));
+	assert.strictEqual(ulaLinks(ap.renderData(d)).length, 2);
+	ok('ap: collector without apmond status keeps every ULA a link');
+
+	// non-collector: get_ap_data is this node only, its ULA is plain text, only the "here" link remains
+	const ownReport = {};
+	ownReport['System@02:00:00:0a:00:00'] = JSON.parse(addrAll)['System@02:00:00:0a:00:00'];
+	d = await mk({ show_ap_data: '', get_ap_data: JSON.stringify(ownReport), status: peerStatus }).fetchData();
+	assert.ok(!d.collector && d.nodes.length === 1 && d.nodes[0].own);
+
+	const tp = ap.renderData(Object.assign({}, d, { role: 'peer' }));
+	assert.deepStrictEqual(ulaLinks(tp), [ 'here' ]);
+	assert.ok(text(tp).includes('fd18:cef4:6dbd:baa0:200:ff:fe0a:0'));
+	ok('ap: non-collector single row shows its own ULA as plain text, only the collector link remains');
+
+	// collector: apmond status is read once for this node's identity, not on every refresh
+	let statusCalls = 0;
+	let statusOut = routerStatus;
+	const cached = loadView('accesspoints', { fs: { exec_direct: (cmd, args) => {
+		if (args[0] === 'status') {
+			statusCalls++;
+			return Promise.resolve(statusOut);
+		}
+
+		return Promise.resolve(args[0] === 'show_ap_data' ? addrAll : '');
+	} } });
+
+	await cached.fetchData();
+	d = await cached.fetchData();
+	d = await cached.fetchData();
+	assert.strictEqual(statusCalls, 1);
+	assert.strictEqual(d.nodes.find((n) => n.own).mac, '02:00:00:0a:00:01');
+	ok('ap: collector reads apmond status once, the own row stays marked on later refreshes');
+
+	// status not ready at first: nothing marked, tried again on the next refresh, then kept
+	const retry = loadView('accesspoints', { fs: { exec_direct: (cmd, args) => {
+		if (args[0] === 'status') {
+			statusCalls++;
+			return Promise.resolve(statusOut);
+		}
+
+		return Promise.resolve(args[0] === 'show_ap_data' ? addrAll : '');
+	} } });
+
+	statusCalls = 0;
+	statusOut = '';
+	d = await retry.fetchData();
+	assert.ok(d.nodes.every((n) => !n.own));
+	statusOut = routerStatus;
+	d = await retry.fetchData();
+	d = await retry.fetchData();
+	assert.strictEqual(statusCalls, 2);
+	assert.strictEqual(d.nodes.filter((n) => n.own).length, 1);
+	ok('ap: empty apmond status is not kept, the next refresh reads it again');
+
+	// header cells wrap only between words, data cells may wrap anywhere
+	const heads = find(tc, 'th');
+	assert.ok(heads.every((h) => !/overflow-wrap:anywhere/.test(h.attrs.style)));
+	assert.ok(find(tc, 'td').some((c) => /overflow-wrap:anywhere/.test(c.attrs.style)));
+	ok('ap: column titles are never split inside a word');
 	const acl = JSON.parse(fs.readFileSync(path.join(ROOT, 'root/usr/share/rpcd/acl.d/luci-app-apmond.json')))['luci-app-apmond'].read.file;
 	const st2 = loadView('status', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
 	const lg = loadView('log', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
-	await st2.fetchStatus(); await lg.fetchLog();
+	const vv = loadView('version', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
+	await st2.fetchStatus(); await lg.fetchLog(); await vv.fetchApmondVersion();
 	calls.forEach((c) => assert.ok(acl[c] && acl[c].includes('exec'), 'not in ACL: ' + c));
 	assert.strictEqual(Object.keys(acl).length, new Set(calls).size); ok('acl: every command the views run is allowed, and nothing else (' + [ ...new Set(calls) ].join(', ') + ')');
 
@@ -248,7 +384,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 		opts.length = 0;
 		const sv2 = loadView('settings', { form: fakeForm, dom: fakeDom, view: fakeView, uci: { get: () => seed, load: () => Promise.resolve() } });
 		const node = await sv2.render();
-		assert.strictEqual(node.children.length, 2);
+		assert.strictEqual(node.children.length, 3);
 		assert.strictEqual(noticeOf(node).length, seed ? 0 : 1);
 		if (!seed) {
 			const t = text(noticeOf(node)[0]);
@@ -284,6 +420,51 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	dl.cfgvalue = () => undefined; assert.strictEqual(dl.write('setup', '1'), undefined);
 	dl.cfgvalue = () => '3'; dl.write('setup', '1'); assert.strictEqual(removed, 1);
 	assert.strictEqual(dl.write('setup', '2'), 'written'); ok('settings: choosing a default leaves the option unset (or removes it)');
+
+	// Version: luci-app-apmond's own version strings, the installed apmond version (apmond -v), the page footer
+	const ver = loadView('version');
+	const vsrc = fs.readFileSync(path.join(VIEWS, 'version.js'), 'utf8');
+	assert.ok(/^var last_version = '[^']+';$/m.test(vsrc) && /^var version = '[^']+';$/m.test(vsrc)); ok('version: last_version and version are one line each in version.js');
+	assert.strictEqual(ver.version, '1.0.1'); assert.strictEqual(ver.last_version, '1.0.0'); ok('version: 1.0.1, previous 1.0.0');
+	const vre = /^\d+\.\d+\.\d+(~be7a)?$/;
+	assert.ok(vre.test(ver.version) && vre.test(ver.last_version)); ok('version: x.y.z or x.y.z~be7a, as apmond and mesh11sd');
+	const vnum = (v) => v.replace('~be7a', '').split('.').map(Number);
+	const cmpv = (a, b) => { for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0; };
+	assert.ok(cmpv(vnum(ver.version), vnum(ver.last_version)) > 0); ok('version: newer than last_version');
+	const head = fs.readFileSync(path.join(ROOT, 'ChangeLog'), 'utf8').split('\n')[0];
+	assert.strictEqual(head, 'luci-app-apmond (' + ver.version + ')'); ok('version: ChangeLog heading matches (' + head + ')');
+	assert.strictEqual(ver.parseApmondVersion('apmond version 1.0.1~be7a\n'), '1.0.1~be7a');
+	assert.strictEqual(ver.parseApmondVersion('apmond version 1.0.2'), '1.0.2'); ok('version: apmond -v output parsed');
+	const unknown100 = 'Unknown option [ -v ]\n\n  Usage: apmond [option] [argument...]\n\n  option: version\n\tPrint the version of apmond\n';
+	[ '', null, undefined, unknown100, 'garbage' ].forEach((x) => assert.strictEqual(ver.parseApmondVersion(x), null)); ok('version: apmond 1.0.0 (no -v), empty or failed output gives null');
+	const vcalls = [];
+	const vok = loadView('version', { fs: { exec_direct: (cmd, args) => { vcalls.push(cmd + ' ' + args.join(' ')); return Promise.resolve('apmond version 1.0.1~be7a\n'); } } });
+	assert.strictEqual(await vok.fetchApmondVersion(), '1.0.1~be7a'); assert.deepStrictEqual(vcalls, [ '/usr/sbin/apmond -v' ]); ok('version: installed apmond version read with "apmond -v"');
+	const vfail = loadView('version', { fs: { exec_direct: () => Promise.reject(new Error('exit 1')) } });
+	assert.strictEqual(await vfail.fetchApmondVersion(), null);
+	const v100 = loadView('version', { fs: { exec_direct: () => Promise.resolve(unknown100) } });
+	assert.strictEqual(await v100.fetchApmondVersion(), null); ok('version: a failed or 1.0.0 -v call resolves to null, no throw');
+	assert.strictEqual(ver.footerText(), 'luci-app-apmond 1.0.1');
+	assert.strictEqual(ver.footerText('1.0.1~be7a'), 'luci-app-apmond 1.0.1, apmond 1.0.1~be7a');
+	assert.strictEqual(ver.footerText(null), 'luci-app-apmond 1.0.1, apmond unknown'); ok('version: footer text, apmond unknown when it cannot be read');
+	const tick = () => new Promise((r) => setTimeout(r, 0));
+	for (const [ fsFake, want ] of [ [ vok, 'apmond 1.0.1~be7a' ], [ v100, 'apmond unknown' ], [ vfail, 'apmond unknown' ] ]) {
+		const fv = loadView('version', { fs: { exec_direct: (c, a) => fsFake === vok ? Promise.resolve('apmond version 1.0.1~be7a\n') : fsFake === v100 ? Promise.resolve(unknown100) : Promise.reject(new Error('x')) }, dom: fakeDom });
+		const f = fv.footer();
+		assert.strictEqual(f.attrs['class'], 'apmond-version'); assert.strictEqual(text(f), 'luci-app-apmond 1.0.1');
+		await tick(); await tick();
+		assert.strictEqual(text(f), 'luci-app-apmond 1.0.1, ' + want);
+	}
+	ok('version: footer filled in with the apmond version, or unknown');
+	const hasFooter = (n) => find(n, 'div').some((d) => d.attrs && d.attrs['class'] === 'apmond-version');
+	const fakeFs = { exec_direct: () => Promise.resolve('') };
+	assert.ok(hasFooter(loadView('status', { fs: fakeFs }).render(''))); ok('version: footer on the Status page');
+	assert.ok(hasFooter(loadView('accesspoints', { fs: fakeFs }).render({ collector: false, nodes: [] }))); ok('version: footer on the Access points page');
+	assert.ok(hasFooter(loadView('log', { fs: fakeFs, ui: { createHandlerFn: () => null } }).render(''))); ok('version: footer on the Log page');
+	opts.length = 0;
+	const svf = await loadView('settings', { form: fakeForm, dom: fakeDom, view: fakeView, uci: { get: () => 'x', load: () => Promise.resolve() } }).render();
+	assert.ok(hasFooter(svf)); ok('version: footer on the Settings page');
+	assert.ok(!fs.readFileSync(path.join(ROOT, 'root/usr/share/luci/menu.d/luci-app-apmond.json'), 'utf8').includes('apmond/version')); ok('version: version.js is a module, not a menu page');
 
 	console.log('\nResult: ' + pass + ' passed');
 })().catch((e) => { console.error('FAIL:', e.message); process.exit(1); });

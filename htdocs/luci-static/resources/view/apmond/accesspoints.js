@@ -4,6 +4,7 @@
 'require ui';
 'require poll';
 'require dom';
+'require view.apmond.version as apmondver';
 
 /*
  * ApmonD access points.
@@ -13,7 +14,8 @@
  *
  *   "System@<mac>": {
  *     "Device": ..., "Description": ..., "Release": ..., "phy": { ... },
- *     "node_status": { "device_mac", "uptime_seconds", "load_average_1min", "free_ram_kb", ... },
+ *     "node_status": { "device_mac", "node_ula", "ipv4_addresses", "uptime_seconds", "load_average_1min",
+ *                      "free_ram_kb", ... },
  *     "clients@<mac>": {
  *       "<SSID>@<iface>" or "<port>@<bridge>": {
  *         "<client mac>": { "rx_bytes", "tx_bytes", "signal_avg", "tx_bitrate", "rx_bitrate",
@@ -23,6 +25,9 @@
  *   }
  *
  * Text values come from mesh11sd style output, with underscores for spaces ("72.2_MBit/s").
+ *
+ * node_ula (this AP's apmond ULA) and ipv4_addresses ([ "192.168.1.2/24", ... ]) are sent from apmond 1.0.1.
+ * Older apmond and mesh11sd APs do not send them: their Address cells show "-" and have no link.
  */
 
 var APMOND = '/usr/sbin/apmond';
@@ -35,10 +40,13 @@ var expanded = {};
  * client table lines up with the others. Long values wrap inside their cell. In the narrow
  * (mobile) theme layout the rows are flex boxes, the widths do not apply and the data-title
  * labels are shown instead of the hidden title row.
+ *
+ * Header cells only wrap between words, so a title is never split inside a word ("Client s").
  */
 var CLIENT_COLS = [ 13, 15, 5, 13, 13, 13, 9, 9, 10 ];
-var NODE_COLS = [ 15, 14, 21, 12, 13, 9, 6, 10 ];
+var NODE_COLS = [ 10, 11, 15, 10, 12, 9, 9, 7, 7, 10 ];
 var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
+var HEAD_STYLE = 'overflow-wrap:normal;word-break:normal';
 
 return view.extend({
 	/* "72.2_MBit/s_MCS_7" -> "72.2 MBit/s MCS 7" */
@@ -107,12 +115,34 @@ return view.extend({
 		return this.text(v);
 	},
 
+	/* a ULA (fc00::/7) as apmond prints it, e.g. "fd18:cef4:6dbd:baa0:0:ff:fe0a:0", or null: only such a value is made a link */
+	parseULA: function(v) {
+		var s = (typeof(v) == 'string') ? v.toLowerCase() : '';
+
+		if (!/^f[cd][0-9a-f]{2}:[0-9a-f:]+$/.test(s) || s.length > 39)
+			return null;
+
+		return s;
+	},
+
+	/* ipv4_addresses: the a.b.c.d or a.b.c.d/len strings of the array, [] if missing or not an array */
+	parseIPv4: function(v) {
+		if (!Array.isArray(v))
+			return [];
+
+		return v.map(function(a) {
+			return String(a);
+		}).filter(function(a) {
+			return /^[0-9]{1,3}(\.[0-9]{1,3}){3}(\/[0-9]{1,2})?$/.test(a);
+		});
+	},
+
 	/*
 	 * Turn the apmond JSON into a list of nodes:
-	 * [ { mac, device, release, uptime, load, free_ram_kb, version, clients: [ ... ] }, ... ]
+	 * [ { mac, device, release, uptime, load, free_ram_kb, version, ula, ipv4, clients: [ ... ] }, ... ]
 	 */
 	parseNodes: function(obj) {
-		var nodes = [];
+		var self = this, nodes = [];
 
 		if (obj == null)
 			return nodes;
@@ -160,6 +190,8 @@ return view.extend({
 				load: [ ns.load_average_1min, ns.load_average_5min, ns.load_average_15min ],
 				free_ram_kb: ns.free_ram_kb,
 				version: ns.apmond_version,
+				ula: self.parseULA(ns.node_ula),
+				ipv4: self.parseIPv4(ns.ipv4_addresses),
 				clients: clients
 			});
 		});
@@ -243,7 +275,8 @@ return view.extend({
 
 	/* a th or td with a fixed width, wrapping long values, labelled for the mobile layout */
 	cell: function(tag, width, title, content) {
-		var attrs = { 'class': tag, 'style': 'width:' + width + '%;' + CELL_STYLE };
+		var style = (tag == 'th') ? HEAD_STYLE : CELL_STYLE;
+		var attrs = { 'class': tag, 'style': 'width:' + width + '%;' + style };
 
 		if (title != null)
 			attrs['data-title'] = title;
@@ -295,13 +328,48 @@ return view.extend({
 		}));
 	},
 
+	/*
+	 * ULA cell: the AP's ULA as a link to its Access points page, opened in a new window, as the
+	 * peer note links to the collector; "-" for an AP that does not send node_ula (older apmond, mesh11sd).
+	 * This node's own ULA is plain text: a link would only open this page again.
+	 */
+	renderULA: function(ula, own) {
+		var url;
+
+		if (!ula)
+			return '-';
+
+		if (own)
+			return ula;
+
+		url = this.nodeURL(ula);
+
+		return E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ ula ]);
+	},
+
+	/* IPv4 cell: one address per line, "-" when there are none or the AP does not send them */
+	renderIPv4: function(addrs) {
+		var out = [];
+
+		if (!addrs || !addrs.length)
+			return '-';
+
+		addrs.forEach(function(a, i) {
+			if (i)
+				out.push(E('br'));
+			out.push(a);
+		});
+
+		return E('span', {}, out);
+	},
+
 	renderNodes: function(nodes) {
 		var self = this, rows = [];
 
 		nodes.forEach(function(n) {
 			var open = !!expanded[n.mac],
 			    detail = E('tr', { 'class': 'tr', 'style': open ? null : 'display:none' }, [
-				E('td', { 'class': 'td', 'colspan': '8', 'style': 'flex:1 1 100%' }, [ self.renderClients(n) ])
+				E('td', { 'class': 'td', 'colspan': String(NODE_COLS.length), 'style': 'flex:1 1 100%' }, [ self.renderClients(n) ])
 			    ]),
 			    btn = E('button', {
 				'class': 'btn cbi-button',
@@ -315,6 +383,8 @@ return view.extend({
 			rows.push([
 				self.text(n.device),
 				n.mac,
+				self.renderULA(n.ula, n.own),
+				self.renderIPv4(n.ipv4),
 				self.text(n.release),
 				self.formatDuration(n.uptime),
 				n.load.map(function(l) { return self.text(l); }).join(' / '),
@@ -326,15 +396,60 @@ return view.extend({
 		});
 
 		return this.fixedTable(NODE_COLS, [
-			_('Device'), _('MAC address'), _('Release'), _('Uptime'), _('Load'), _('Free RAM'), _('Clients'), ' '
+			_('Device'), _('MAC address'), _('ULA'), _('IPv4 address'), _('Release'), _('Uptime'), _('Load'),
+			_('Free RAM'), _('Clients'), ' '
 		], rows);
 	},
 
 	/*
-	 * Fetch the data: show_ap_data all on the collector; when that gives no access points
-	 * (a peer, or nothing received yet) get_ap_data for this node only, plus apmond status for
-	 * this node's role and the collector address.
-	 * Resolves to { collector: bool, nodes: [ ... ], role: string, collector_ula: string }.
+	 * Is node n this node? True when its ULA or its MAC matches node_ula or ap_mac_id of
+	 * this node (id, from getOwnId). Does not use the page address: the page may be opened by IPv4.
+	 */
+	isOwnNode: function(n, id) {
+		var ownULA = this.parseULA(id.node_ula);
+		var ownMAC = String(id.ap_mac_id || '').toLowerCase();
+
+		if (ownULA && n.ula == ownULA)
+			return true;
+
+		if (ownMAC && String(n.mac || '').toLowerCase() == ownMAC)
+			return true;
+
+		return false;
+	},
+
+	/*
+	 * This node's identity, { node_ula, ap_mac_id } from apmond status, for isOwnNode().
+	 * Read once and kept: it does not change while the page is open. When status gives nothing
+	 * it is not kept, so the next refresh tries again, and meanwhile no row is marked as this node.
+	 */
+	getOwnId: function() {
+		var self = this;
+
+		if (this.ownId)
+			return Promise.resolve(this.ownId);
+
+		return L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null).then(function(out) {
+			var st = self.parseJSON(out);
+
+			st = (st && st.apmond_status) || {};
+
+			if (!st.node_ula && !st.ap_mac_id)
+				return {};
+
+			self.ownId = { node_ula: st.node_ula, ap_mac_id: st.ap_mac_id };
+
+			return self.ownId;
+		});
+	},
+
+	/*
+	 * Fetch the data: show_ap_data all on the collector, with this node's own row marked from
+	 * getOwnId(). When that gives no access points (a peer, or nothing received yet) get_ap_data
+	 * for this node only, so its row is always this node, plus apmond status for this node's role
+	 * and the collector address.
+	 * Resolves to { collector: bool, nodes: [ ... ], role: string, collector_ula: string },
+	 * each node with own: true for this node's own row.
 	 */
 	fetchData: function() {
 		var self = this;
@@ -342,20 +457,34 @@ return view.extend({
 		return L.resolveDefault(fs.exec_direct(APMOND, [ 'show_ap_data', 'all' ]), null).then(function(all) {
 			var nodes = self.parseNodes(self.parseJSON(all));
 
-			if (nodes.length)
-				return { collector: true, nodes: nodes };
+			if (nodes.length) {
+				return self.getOwnId().then(function(id) {
+					// collector: mark this node's own row
+					nodes.forEach(function(n) {
+						n.own = self.isOwnNode(n, id);
+					});
+
+					return { collector: true, nodes: nodes };
+				});
+			}
 
 			return Promise.all([
 				L.resolveDefault(fs.exec_direct(APMOND, [ 'get_ap_data' ]), null),
 				L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null)
 			]).then(function(res) {
+				var ownNodes = self.parseNodes(self.parseJSON(res[0]));
 				var st = self.parseJSON(res[1]);
 
 				st = (st && st.apmond_status) || {};
 
+				// get_ap_data is this node's own report
+				ownNodes.forEach(function(n) {
+					n.own = true;
+				});
+
 				return {
 					collector: false,
-					nodes: self.parseNodes(self.parseJSON(res[0])),
+					nodes: ownNodes,
 					role: st.role || '',
 					collector_ula: st.collector || ''
 				};
@@ -363,12 +492,17 @@ return view.extend({
 		});
 	},
 
-	/* the Access points page on the collector, by its ULA, in the scheme this page was loaded with */
-	collectorURL: function(ula) {
+	/* the Access points page on a node (the collector, or an AP), by its ULA, in the scheme this page was loaded with */
+	nodeURL: function(ula) {
 		var proto = (typeof window != 'undefined' && window.location && window.location.protocol) || 'https:',
 		    path = (L.url ? L.url('admin/services/apmond/accesspoints') : '/cgi-bin/luci/admin/services/apmond/accesspoints');
 
 		return proto + '//[' + ula + ']' + path;
+	},
+
+	/* the Access points page on the collector */
+	collectorURL: function(ula) {
+		return this.nodeURL(ula);
 	},
 
 	/* the note above the table on a node that holds no reports */
@@ -445,7 +579,8 @@ return view.extend({
 		return E('div', { 'class': 'cbi-map' }, [
 			E('h2', {}, [ _('ApmonD Access Points') ]),
 			E('div', { 'class': 'cbi-map-descr' }, [ _('Refreshed every 30 seconds.') ]),
-			box
+			box,
+			apmondver.footer()
 		]);
 	},
 

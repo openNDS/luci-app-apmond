@@ -4,6 +4,7 @@
 		"read": {
 			"cgi-io": [ "exec" ],
 			"file": {
+				"/usr/sbin/apmond -v": [ "exec" ],
 				"/usr/sbin/apmond status": [ "exec" ],
 				"/usr/sbin/apmond show_ap_data all": [ "exec" ],
 				"/usr/sbin/apmond get_ap_data": [ "exec" ],
