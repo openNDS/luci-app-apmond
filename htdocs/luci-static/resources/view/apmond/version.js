@@ -10,7 +10,7 @@
  */
 
 var last_version = '1.0.0';
-var version = '1.0.1~be7a';
+var version = '1.0.1';
 
 var APMOND = '/usr/sbin/apmond';
 

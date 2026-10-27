@@ -425,7 +425,7 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const ver = loadView('version');
 	const vsrc = fs.readFileSync(path.join(VIEWS, 'version.js'), 'utf8');
 	assert.ok(/^var last_version = '[^']+';$/m.test(vsrc) && /^var version = '[^']+';$/m.test(vsrc)); ok('version: last_version and version are one line each in version.js');
-	assert.strictEqual(ver.version, '1.0.1~be7a'); assert.strictEqual(ver.last_version, '1.0.0'); ok('version: 1.0.1~be7a, previous 1.0.0');
+	assert.strictEqual(ver.version, '1.0.1'); assert.strictEqual(ver.last_version, '1.0.0'); ok('version: 1.0.1, previous 1.0.0');
 	const vre = /^\d+\.\d+\.\d+(~be7a)?$/;
 	assert.ok(vre.test(ver.version) && vre.test(ver.last_version)); ok('version: x.y.z or x.y.z~be7a, as apmond and mesh11sd');
 	const vnum = (v) => v.replace('~be7a', '').split('.').map(Number);
@@ -444,16 +444,16 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	assert.strictEqual(await vfail.fetchApmondVersion(), null);
 	const v100 = loadView('version', { fs: { exec_direct: () => Promise.resolve(unknown100) } });
 	assert.strictEqual(await v100.fetchApmondVersion(), null); ok('version: a failed or 1.0.0 -v call resolves to null, no throw');
-	assert.strictEqual(ver.footerText(), 'luci-app-apmond 1.0.1~be7a');
-	assert.strictEqual(ver.footerText('1.0.1~be7a'), 'luci-app-apmond 1.0.1~be7a, apmond 1.0.1~be7a');
-	assert.strictEqual(ver.footerText(null), 'luci-app-apmond 1.0.1~be7a, apmond unknown'); ok('version: footer text, apmond unknown when it cannot be read');
+	assert.strictEqual(ver.footerText(), 'luci-app-apmond 1.0.1');
+	assert.strictEqual(ver.footerText('1.0.1~be7a'), 'luci-app-apmond 1.0.1, apmond 1.0.1~be7a');
+	assert.strictEqual(ver.footerText(null), 'luci-app-apmond 1.0.1, apmond unknown'); ok('version: footer text, apmond unknown when it cannot be read');
 	const tick = () => new Promise((r) => setTimeout(r, 0));
 	for (const [ fsFake, want ] of [ [ vok, 'apmond 1.0.1~be7a' ], [ v100, 'apmond unknown' ], [ vfail, 'apmond unknown' ] ]) {
 		const fv = loadView('version', { fs: { exec_direct: (c, a) => fsFake === vok ? Promise.resolve('apmond version 1.0.1~be7a\n') : fsFake === v100 ? Promise.resolve(unknown100) : Promise.reject(new Error('x')) }, dom: fakeDom });
 		const f = fv.footer();
-		assert.strictEqual(f.attrs['class'], 'apmond-version'); assert.strictEqual(text(f), 'luci-app-apmond 1.0.1~be7a');
+		assert.strictEqual(f.attrs['class'], 'apmond-version'); assert.strictEqual(text(f), 'luci-app-apmond 1.0.1');
 		await tick(); await tick();
-		assert.strictEqual(text(f), 'luci-app-apmond 1.0.1~be7a, ' + want);
+		assert.strictEqual(text(f), 'luci-app-apmond 1.0.1, ' + want);
 	}
 	ok('version: footer filled in with the apmond version, or unknown');
 	const hasFooter = (n) => find(n, 'div').some((d) => d.attrs && d.attrs['class'] === 'apmond-version');
