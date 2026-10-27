@@ -1,5 +1,6 @@
 luci-app-apmond (1.0.1~be7a)
   * Add - version and last_version in one place (view/apmond/version.js), shown at the foot of each ApmonD page with the installed apmond version from apmond -v, unknown if apmond has no -v [bluewavenet]
+  * Add - Access points: ULA and IPv4 address columns for each AP, the ULA links to that AP's Access points page in a new window, older apmond and mesh11sd APs show - with no link [bluewavenet]
 
  -- Rob White <dot@blue-wave.net>  Mon, 26 Oct 2026 22:26:50 +0000
 

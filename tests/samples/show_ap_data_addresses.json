@@ -1,0 +1,183 @@
+{
+  "System@02:00:00:0a:00:00": {
+    "Distribution": "unknown",
+    "Release": "unknown",
+    "Revision": "unknown",
+    "Target": "unknown",
+    "Architecture": "unknown",
+    "Description": "unknown",
+    "Device": "unknown",
+    "phy": {},
+    "node_status": {
+      "apmond_version": "1.0.1~be7a",
+      "apmond_protocol": "1",
+      "apmond_checksum": "0b3423e828c7b5fb66c083584de6aebafab8cd9e39d80f3604e407c8dd2d8cff",
+      "factory_mac": "unknown",
+      "device_mac": "02:00:00:0a:00:00",
+      "node_ula": "fd18:cef4:6dbd:baa0:200:ff:fe0a:0",
+      "ipv4_addresses": [
+        "192.168.1.2/24",
+        "10.10.0.2/16"
+      ],
+      "uptime_seconds": 93803,
+      "load_average_1min": "0.80",
+      "load_average_5min": "0.77",
+      "load_average_15min": "0.82",
+      "free_ram_kb": 6622136,
+      "free_flash_kb": 122041536,
+      "cpu_temperature_c": "not available",
+      "cpu_frequency_mhz": "none scaling"
+    },
+    "clients@02:00:00:0a:00:00": {
+      "OpenWrt@phy0-ap0": {
+        "02:00:00:00:00:01": {
+          "rx_bytes": "1000",
+          "tx_bytes": "2000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "10_seconds",
+          "timestamp": "1793118059123_ms",
+          "date_time": "Tue_Oct_27_16:20:59_GMT_2026"
+        },
+        "02:00:00:00:00:02": {
+          "rx_bytes": "2000",
+          "tx_bytes": "4000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "20_seconds",
+          "timestamp": "1793118059123_ms",
+          "date_time": "Tue_Oct_27_16:20:59_GMT_2026"
+        }
+      },
+      "OpenWrt5@phy1-ap0": {
+        "02:00:00:00:00:01": {
+          "rx_bytes": "1000",
+          "tx_bytes": "2000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "10_seconds",
+          "timestamp": "1793118059123_ms",
+          "date_time": "Tue_Oct_27_16:20:59_GMT_2026"
+        }
+      },
+      "apmdum0@apmbr0": {
+        "76:30:55:95:d8:99": {
+          "rx_bytes": "866",
+          "tx_bytes": "1866",
+          "rx_bitrate": "10000",
+          "tx_bitrate": "10000",
+          "stats_scope": "port",
+          "timestamp": "1793118059000",
+          "date_time": "Tue_Oct_27_16:20:59_GMT_2026"
+        },
+        "02:aa:bb:cc:dd:01": {
+          "rx_bytes": "866",
+          "tx_bytes": "1866",
+          "rx_bitrate": "10000",
+          "tx_bitrate": "10000",
+          "stats_scope": "port",
+          "timestamp": "1793118059000",
+          "date_time": "Tue_Oct_27_16:20:59_GMT_2026"
+        }
+      }
+    }
+  },
+  "System@02:00:00:0a:00:01": {
+    "Distribution": "unknown",
+    "Release": "unknown",
+    "Revision": "unknown",
+    "Target": "unknown",
+    "Architecture": "unknown",
+    "Description": "unknown",
+    "Device": "unknown",
+    "phy": {},
+    "node_status": {
+      "apmond_version": "1.0.1~be7a",
+      "apmond_protocol": "1",
+      "apmond_checksum": "0b3423e828c7b5fb66c083584de6aebafab8cd9e39d80f3604e407c8dd2d8cff",
+      "factory_mac": "unknown",
+      "device_mac": "02:00:00:0a:00:01",
+      "node_ula": "fd18:cef4:6dbd:baa0:200:ff:fe0a:1",
+      "ipv4_addresses": [],
+      "uptime_seconds": 93676,
+      "load_average_1min": "0.64",
+      "load_average_5min": "0.70",
+      "load_average_15min": "0.80",
+      "free_ram_kb": 6762708,
+      "free_flash_kb": 122042156,
+      "cpu_temperature_c": "not available",
+      "cpu_frequency_mhz": "none scaling"
+    },
+    "clients@02:00:00:0a:00:01": {
+      "OpenWrt@phy0-ap0": {
+        "02:00:00:00:00:01": {
+          "rx_bytes": "1000",
+          "tx_bytes": "2000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "10_seconds",
+          "timestamp": "1793117932123_ms",
+          "date_time": "Tue_Oct_27_16:18:52_GMT_2026"
+        },
+        "02:00:00:00:00:02": {
+          "rx_bytes": "2000",
+          "tx_bytes": "4000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "20_seconds",
+          "timestamp": "1793117932123_ms",
+          "date_time": "Tue_Oct_27_16:18:52_GMT_2026"
+        }
+      },
+      "OpenWrt5@phy1-ap0": {
+        "02:00:00:00:00:01": {
+          "rx_bytes": "1000",
+          "tx_bytes": "2000",
+          "tx_retries": "3",
+          "signal_avg": "-51_[-53,_-54]_dBm",
+          "tx_bitrate": "433.3_MBit/s_VHT-MCS_9_80MHz_short_GI_VHT-NSS_1",
+          "rx_bitrate": "390.0_MBit/s_VHT-MCS_8_80MHz_short_GI_VHT-NSS_1",
+          "avg_ack_signal": "-50_dBm",
+          "connected_time": "10_seconds",
+          "timestamp": "1793117932123_ms",
+          "date_time": "Tue_Oct_27_16:18:52_GMT_2026"
+        }
+      },
+      "apmdum0@apmbr0": {
+        "76:30:55:95:d8:99": {
+          "rx_bytes": "656",
+          "tx_bytes": "1446",
+          "rx_bitrate": "10000",
+          "tx_bitrate": "10000",
+          "stats_scope": "port",
+          "timestamp": "1793117932000",
+          "date_time": "Tue_Oct_27_16:18:52_GMT_2026"
+        },
+        "02:aa:bb:cc:dd:01": {
+          "rx_bytes": "656",
+          "tx_bytes": "1446",
+          "rx_bitrate": "10000",
+          "tx_bitrate": "10000",
+          "stats_scope": "port",
+          "timestamp": "1793117932000",
+          "date_time": "Tue_Oct_27_16:18:52_GMT_2026"
+        }
+      }
+    }
+  }
+}

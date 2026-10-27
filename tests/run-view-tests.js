@@ -141,8 +141,52 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	assert.strictEqual(widthsOf(ctabs[0]).reduce((a, b) => a + +b, 0), 100);
 	ctabs.forEach((x) => x.children.slice(1).forEach((row) => assert.deepStrictEqual(widthsOf({ children: [ row ] }), widthsOf(ctabs[0]))));
 	ok('ap: client tables of both nodes use identical fixed column widths summing to 100%');
-	assert.ok(/table-layout:fixed/.test(t.attrs.style) && widthsOf(t).length === 8 && widthsOf(t).reduce((a, b) => a + +b, 0) === 100);
+	assert.ok(/table-layout:fixed/.test(t.attrs.style) && widthsOf(t).length === 10 && widthsOf(t).reduce((a, b) => a + +b, 0) === 100);
 	ok('ap: node table has fixed column widths summing to 100%');
+	const dtd = find(t, 'td').filter((c) => c.attrs.colspan);
+	assert.ok(dtd.length === 2 && dtd.every((c) => c.attrs.colspan === '10')); ok('ap: client table row spans all 10 node columns');
+
+	// node addresses (apmond 1.0.1): node_ula and ipv4_addresses right after device_mac
+	const titles = t.children[0].children.map(text);
+	assert.deepStrictEqual(titles.slice(0, 5), [ 'Device', 'MAC address', 'ULA', 'IPv4 address', 'Release' ]); ok('ap: ULA and IPv4 address columns after MAC address');
+	// older APs (the apmond 1.0.0 sample has no node_ula / ipv4_addresses): "-" and no link
+	assert.ok(nodes.every((n) => n.ula === null && Array.isArray(n.ipv4) && n.ipv4.length === 0));
+	assert.strictEqual(find(t, 'a').length, 0);
+	const oldRow = t.children[1];
+	assert.ok(text(oldRow.children[2]) === '-' && text(oldRow.children[3]) === '-'); ok('ap: older AP report: ULA and IPv4 show -, no link');
+	const na = ap.parseNodes(ap.parseJSON(sample('show_ap_data_addresses.json')));
+	const nc = na.find((n) => n.mac === '02:00:00:0a:00:00'), nr = na.find((n) => n.mac === '02:00:00:0a:00:01');
+	assert.strictEqual(nc.ula, 'fd18:cef4:6dbd:baa0:200:ff:fe0a:0');
+	assert.deepStrictEqual(nc.ipv4, [ '192.168.1.2/24', '10.10.0.2/16' ]);
+	assert.strictEqual(nr.ula, 'fd18:cef4:6dbd:baa0:200:ff:fe0a:1');
+	assert.deepStrictEqual(nr.ipv4, []); ok('ap: apmond 1.0.1 report: node_ula and ipv4_addresses parsed');
+	const tn = ap.renderNodes(na);
+	const links = find(tn, 'a');
+	assert.strictEqual(links.length, 2);
+	const lc = links.find((x) => text(x) === nc.ula);
+	assert.strictEqual(lc.attrs.href, 'https://[fd18:cef4:6dbd:baa0:200:ff:fe0a:0]/cgi-bin/luci/admin/services/apmond/accesspoints');
+	assert.ok(lc.attrs.target === '_blank' && lc.attrs.rel === 'noopener' && lc.attrs.title === lc.attrs.href);
+	ok('ap: ULA links to the AP\'s Access points page in a new window, as the peer note links to the collector');
+	assert.strictEqual(ap.nodeURL('fd18:cef4:6dbd:baa0::1'), ap.collectorURL('fd18:cef4:6dbd:baa0::1')); ok('ap: AP and collector links use the same URL form');
+	const rowC = tn.children.slice(1).find((r) => r.children && text(r.children[1]) === nc.mac);
+	assert.strictEqual(text(rowC.children[3]), '192.168.1.2/24  10.10.0.2/16');
+	assert.strictEqual(find(rowC.children[3], 'br').length, 1);
+	const rowR = tn.children.slice(1).find((r) => r.children && text(r.children[1]) === nr.mac);
+	assert.strictEqual(text(rowR.children[3]), '-'); ok('ap: IPv4 addresses one per line, - when the AP has none');
+	// a mesh11sd AP (mesh11sd node_status: mesh_bridge_mac, no node_ula) mixed with apmond APs
+	const mixedAll = JSON.parse(sample('show_ap_data_addresses.json'));
+	mixedAll['System@02:00:00:0b:00:00'] = { Device: 'mesh11sd AP', node_status: { mesh11sd_version: '7.3.1', mesh_bridge_mac: '02:00:00:0b:00:00', uptime_seconds: 5 } };
+	const nm = ap.parseNodes(mixedAll);
+	const m11 = nm.find((n) => n.mac === '02:00:00:0b:00:00');
+	assert.ok(nm.length === 3 && m11.ula === null && m11.ipv4.length === 0);
+	assert.strictEqual(find(ap.renderNodes(nm), 'a').length, 2); ok('ap: mesh11sd AP: - and no link, apmond APs still linked');
+	// only a real ULA becomes a link, never anything else a report might carry
+	[ 'unknown', '', null, 'javascript:alert(1)', 'fe80::1', '2001:db8::1', 'fd00::1"><b', 'fd00::1/64', 42, [ 'fd00::1' ] ]
+		.forEach((v) => assert.strictEqual(ap.parseULA(v), null, String(v)));
+	assert.strictEqual(ap.parseULA('FD18:CEF4::1'), 'fd18:cef4::1');
+	assert.deepStrictEqual(ap.parseIPv4('192.168.1.2/24'), []);
+	assert.deepStrictEqual(ap.parseIPv4([ '192.168.1.2', '10.0.0.1/8', 'x', '1.2.3.4/24"><b', null ]), [ '192.168.1.2', '10.0.0.1/8' ]);
+	ok('ap: node_ula must be a ULA and ipv4_addresses dotted quads, anything else gives - and no link');
 	const mixed = ap.renderClients({ clients: [ wl, wd ] });
 	assert.ok(mixed.children.slice(1).every((row) => row.children.every((c) => /overflow-wrap:anywhere/.test(c.attrs.style) && c.attrs['data-title'])));
 	ok('ap: client cells wrap long values and carry data-title labels for the mobile layout');

@@ -14,7 +14,8 @@
  *
  *   "System@<mac>": {
  *     "Device": ..., "Description": ..., "Release": ..., "phy": { ... },
- *     "node_status": { "device_mac", "uptime_seconds", "load_average_1min", "free_ram_kb", ... },
+ *     "node_status": { "device_mac", "node_ula", "ipv4_addresses", "uptime_seconds", "load_average_1min",
+ *                      "free_ram_kb", ... },
  *     "clients@<mac>": {
  *       "<SSID>@<iface>" or "<port>@<bridge>": {
  *         "<client mac>": { "rx_bytes", "tx_bytes", "signal_avg", "tx_bitrate", "rx_bitrate",
@@ -24,6 +25,9 @@
  *   }
  *
  * Text values come from mesh11sd style output, with underscores for spaces ("72.2_MBit/s").
+ *
+ * node_ula (this AP's apmond ULA) and ipv4_addresses ([ "192.168.1.2/24", ... ]) are sent from apmond 1.0.1.
+ * Older apmond and mesh11sd APs do not send them: their Address cells show "-" and have no link.
  */
 
 var APMOND = '/usr/sbin/apmond';
@@ -38,7 +42,7 @@ var expanded = {};
  * labels are shown instead of the hidden title row.
  */
 var CLIENT_COLS = [ 13, 15, 5, 13, 13, 13, 9, 9, 10 ];
-var NODE_COLS = [ 15, 14, 21, 12, 13, 9, 6, 10 ];
+var NODE_COLS = [ 10, 11, 16, 10, 13, 9, 9, 7, 5, 10 ];
 var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
 
 return view.extend({
@@ -108,12 +112,34 @@ return view.extend({
 		return this.text(v);
 	},
 
+	/* a ULA (fc00::/7) as apmond prints it, e.g. "fd18:cef4:6dbd:baa0:0:ff:fe0a:0", or null: only such a value is made a link */
+	parseULA: function(v) {
+		var s = (typeof(v) == 'string') ? v.toLowerCase() : '';
+
+		if (!/^f[cd][0-9a-f]{2}:[0-9a-f:]+$/.test(s) || s.length > 39)
+			return null;
+
+		return s;
+	},
+
+	/* ipv4_addresses: the a.b.c.d or a.b.c.d/len strings of the array, [] if missing or not an array */
+	parseIPv4: function(v) {
+		if (!Array.isArray(v))
+			return [];
+
+		return v.map(function(a) {
+			return String(a);
+		}).filter(function(a) {
+			return /^[0-9]{1,3}(\.[0-9]{1,3}){3}(\/[0-9]{1,2})?$/.test(a);
+		});
+	},
+
 	/*
 	 * Turn the apmond JSON into a list of nodes:
-	 * [ { mac, device, release, uptime, load, free_ram_kb, version, clients: [ ... ] }, ... ]
+	 * [ { mac, device, release, uptime, load, free_ram_kb, version, ula, ipv4, clients: [ ... ] }, ... ]
 	 */
 	parseNodes: function(obj) {
-		var nodes = [];
+		var self = this, nodes = [];
 
 		if (obj == null)
 			return nodes;
@@ -161,6 +187,8 @@ return view.extend({
 				load: [ ns.load_average_1min, ns.load_average_5min, ns.load_average_15min ],
 				free_ram_kb: ns.free_ram_kb,
 				version: ns.apmond_version,
+				ula: self.parseULA(ns.node_ula),
+				ipv4: self.parseIPv4(ns.ipv4_addresses),
 				clients: clients
 			});
 		});
@@ -296,13 +324,44 @@ return view.extend({
 		}));
 	},
 
+	/*
+	 * ULA cell: the AP's ULA as a link to its Access points page, opened in a new window, as the
+	 * peer note links to the collector; "-" for an AP that does not send node_ula (older apmond, mesh11sd)
+	 */
+	renderULA: function(ula) {
+		var url;
+
+		if (!ula)
+			return '-';
+
+		url = this.nodeURL(ula);
+
+		return E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ ula ]);
+	},
+
+	/* IPv4 cell: one address per line, "-" when there are none or the AP does not send them */
+	renderIPv4: function(addrs) {
+		var out = [];
+
+		if (!addrs || !addrs.length)
+			return '-';
+
+		addrs.forEach(function(a, i) {
+			if (i)
+				out.push(E('br'));
+			out.push(a);
+		});
+
+		return E('span', {}, out);
+	},
+
 	renderNodes: function(nodes) {
 		var self = this, rows = [];
 
 		nodes.forEach(function(n) {
 			var open = !!expanded[n.mac],
 			    detail = E('tr', { 'class': 'tr', 'style': open ? null : 'display:none' }, [
-				E('td', { 'class': 'td', 'colspan': '8', 'style': 'flex:1 1 100%' }, [ self.renderClients(n) ])
+				E('td', { 'class': 'td', 'colspan': String(NODE_COLS.length), 'style': 'flex:1 1 100%' }, [ self.renderClients(n) ])
 			    ]),
 			    btn = E('button', {
 				'class': 'btn cbi-button',
@@ -316,6 +375,8 @@ return view.extend({
 			rows.push([
 				self.text(n.device),
 				n.mac,
+				self.renderULA(n.ula),
+				self.renderIPv4(n.ipv4),
 				self.text(n.release),
 				self.formatDuration(n.uptime),
 				n.load.map(function(l) { return self.text(l); }).join(' / '),
@@ -327,7 +388,8 @@ return view.extend({
 		});
 
 		return this.fixedTable(NODE_COLS, [
-			_('Device'), _('MAC address'), _('Release'), _('Uptime'), _('Load'), _('Free RAM'), _('Clients'), ' '
+			_('Device'), _('MAC address'), _('ULA'), _('IPv4 address'), _('Release'), _('Uptime'), _('Load'),
+			_('Free RAM'), _('Clients'), ' '
 		], rows);
 	},
 
@@ -364,12 +426,17 @@ return view.extend({
 		});
 	},
 
-	/* the Access points page on the collector, by its ULA, in the scheme this page was loaded with */
-	collectorURL: function(ula) {
+	/* the Access points page on a node (the collector, or an AP), by its ULA, in the scheme this page was loaded with */
+	nodeURL: function(ula) {
 		var proto = (typeof window != 'undefined' && window.location && window.location.protocol) || 'https:',
 		    path = (L.url ? L.url('admin/services/apmond/accesspoints') : '/cgi-bin/luci/admin/services/apmond/accesspoints');
 
 		return proto + '//[' + ula + ']' + path;
+	},
+
+	/* the Access points page on the collector */
+	collectorURL: function(ula) {
+		return this.nodeURL(ula);
 	},
 
 	/* the note above the table on a node that holds no reports */
