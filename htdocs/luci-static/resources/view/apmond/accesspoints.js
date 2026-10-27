@@ -40,10 +40,13 @@ var expanded = {};
  * client table lines up with the others. Long values wrap inside their cell. In the narrow
  * (mobile) theme layout the rows are flex boxes, the widths do not apply and the data-title
  * labels are shown instead of the hidden title row.
+ *
+ * Header cells only wrap between words, so a title is never split inside a word ("Client s").
  */
 var CLIENT_COLS = [ 13, 15, 5, 13, 13, 13, 9, 9, 10 ];
-var NODE_COLS = [ 10, 11, 16, 10, 13, 9, 9, 7, 5, 10 ];
+var NODE_COLS = [ 10, 11, 15, 10, 12, 9, 9, 7, 7, 10 ];
 var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
+var HEAD_STYLE = 'overflow-wrap:normal;word-break:normal';
 
 return view.extend({
 	/* "72.2_MBit/s_MCS_7" -> "72.2 MBit/s MCS 7" */
@@ -272,7 +275,8 @@ return view.extend({
 
 	/* a th or td with a fixed width, wrapping long values, labelled for the mobile layout */
 	cell: function(tag, width, title, content) {
-		var attrs = { 'class': tag, 'style': 'width:' + width + '%;' + CELL_STYLE };
+		var style = (tag == 'th') ? HEAD_STYLE : CELL_STYLE;
+		var attrs = { 'class': tag, 'style': 'width:' + width + '%;' + style };
 
 		if (title != null)
 			attrs['data-title'] = title;
@@ -326,13 +330,17 @@ return view.extend({
 
 	/*
 	 * ULA cell: the AP's ULA as a link to its Access points page, opened in a new window, as the
-	 * peer note links to the collector; "-" for an AP that does not send node_ula (older apmond, mesh11sd)
+	 * peer note links to the collector; "-" for an AP that does not send node_ula (older apmond, mesh11sd).
+	 * This node's own ULA is plain text: a link would only open this page again.
 	 */
-	renderULA: function(ula) {
+	renderULA: function(ula, own) {
 		var url;
 
 		if (!ula)
 			return '-';
+
+		if (own)
+			return ula;
 
 		url = this.nodeURL(ula);
 
@@ -375,7 +383,7 @@ return view.extend({
 			rows.push([
 				self.text(n.device),
 				n.mac,
-				self.renderULA(n.ula),
+				self.renderULA(n.ula, n.own),
 				self.renderIPv4(n.ipv4),
 				self.text(n.release),
 				self.formatDuration(n.uptime),
@@ -394,10 +402,54 @@ return view.extend({
 	},
 
 	/*
-	 * Fetch the data: show_ap_data all on the collector; when that gives no access points
-	 * (a peer, or nothing received yet) get_ap_data for this node only, plus apmond status for
-	 * this node's role and the collector address.
-	 * Resolves to { collector: bool, nodes: [ ... ], role: string, collector_ula: string }.
+	 * Is node n this node? True when its ULA or its MAC matches node_ula or ap_mac_id of
+	 * this node (id, from getOwnId). Does not use the page address: the page may be opened by IPv4.
+	 */
+	isOwnNode: function(n, id) {
+		var ownULA = this.parseULA(id.node_ula);
+		var ownMAC = String(id.ap_mac_id || '').toLowerCase();
+
+		if (ownULA && n.ula == ownULA)
+			return true;
+
+		if (ownMAC && String(n.mac || '').toLowerCase() == ownMAC)
+			return true;
+
+		return false;
+	},
+
+	/*
+	 * This node's identity, { node_ula, ap_mac_id } from apmond status, for isOwnNode().
+	 * Read once and kept: it does not change while the page is open. When status gives nothing
+	 * it is not kept, so the next refresh tries again, and meanwhile no row is marked as this node.
+	 */
+	getOwnId: function() {
+		var self = this;
+
+		if (this.ownId)
+			return Promise.resolve(this.ownId);
+
+		return L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null).then(function(out) {
+			var st = self.parseJSON(out);
+
+			st = (st && st.apmond_status) || {};
+
+			if (!st.node_ula && !st.ap_mac_id)
+				return {};
+
+			self.ownId = { node_ula: st.node_ula, ap_mac_id: st.ap_mac_id };
+
+			return self.ownId;
+		});
+	},
+
+	/*
+	 * Fetch the data: show_ap_data all on the collector, with this node's own row marked from
+	 * getOwnId(). When that gives no access points (a peer, or nothing received yet) get_ap_data
+	 * for this node only, so its row is always this node, plus apmond status for this node's role
+	 * and the collector address.
+	 * Resolves to { collector: bool, nodes: [ ... ], role: string, collector_ula: string },
+	 * each node with own: true for this node's own row.
 	 */
 	fetchData: function() {
 		var self = this;
@@ -405,20 +457,34 @@ return view.extend({
 		return L.resolveDefault(fs.exec_direct(APMOND, [ 'show_ap_data', 'all' ]), null).then(function(all) {
 			var nodes = self.parseNodes(self.parseJSON(all));
 
-			if (nodes.length)
-				return { collector: true, nodes: nodes };
+			if (nodes.length) {
+				return self.getOwnId().then(function(id) {
+					// collector: mark this node's own row
+					nodes.forEach(function(n) {
+						n.own = self.isOwnNode(n, id);
+					});
+
+					return { collector: true, nodes: nodes };
+				});
+			}
 
 			return Promise.all([
 				L.resolveDefault(fs.exec_direct(APMOND, [ 'get_ap_data' ]), null),
 				L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null)
 			]).then(function(res) {
+				var ownNodes = self.parseNodes(self.parseJSON(res[0]));
 				var st = self.parseJSON(res[1]);
 
 				st = (st && st.apmond_status) || {};
 
+				// get_ap_data is this node's own report
+				ownNodes.forEach(function(n) {
+					n.own = true;
+				});
+
 				return {
 					collector: false,
-					nodes: self.parseNodes(self.parseJSON(res[0])),
+					nodes: ownNodes,
 					role: st.role || '',
 					collector_ula: st.collector || ''
 				};

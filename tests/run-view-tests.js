@@ -260,6 +260,96 @@ function ok(msg) { pass++; console.log('PASS: ' + msg); }
 	const en = ap.renderData({ collector: false, nodes: [], role: 'peer', collector_ula: 'fd18:cef4:6dbd:baa0::1' });
 	assert.ok(text(en).includes('Not a collector.') && find(en, 'a').length === 1 && text(en).includes('no clients connected')); ok('ap: peer with no own data still gets the notice and link');
 	assert.ok(!text(en).includes('Only this node is shown') && text(pn).includes('Only this node is shown')); ok('ap: "only this node" only when this node is shown');
+
+	// own row: this node's ULA is plain text, other nodes' ULAs stay links
+	const routerStatus = sample('status_router.json');
+	const addrAll = sample('show_ap_data_addresses.json');
+	const ulaLinks = (tbl) => find(tbl, 'a').map(text);
+
+	// collector: status_router.json is the 02:00:00:0a:00:01 node of show_ap_data_addresses.json
+	d = await mk({ show_ap_data: addrAll, status: routerStatus }).fetchData();
+	assert.ok(d.collector && d.nodes.length === 2);
+	const ownC = d.nodes.find((n) => n.own);
+	assert.strictEqual(ownC.mac, '02:00:00:0a:00:01');
+	assert.strictEqual(d.nodes.filter((n) => n.own).length, 1);
+	ok('ap: collector marks its own row from node_ula / ap_mac_id in apmond status');
+
+	const tc = ap.renderData(d);
+	assert.deepStrictEqual(ulaLinks(tc), [ 'fd18:cef4:6dbd:baa0:200:ff:fe0a:0' ]);
+	const ownRow = find(tc, 'tr').find((r) => r.children.length > 1 && text(r.children[1]) === ownC.mac);
+	assert.strictEqual(text(ownRow.children[2]), ownC.ula);
+	assert.strictEqual(find(ownRow.children[2], 'a').length, 0);
+	ok('ap: collector own row shows its ULA as plain text, the other AP is still a link');
+
+	// own row found by MAC alone (upper case), and by ULA alone
+	assert.ok(ap.isOwnNode({ mac: '02:00:00:0a:00:01', ula: null }, { ap_mac_id: '02:00:00:0A:00:01' }));
+	assert.ok(ap.isOwnNode({ mac: 'x', ula: 'fd18:cef4:6dbd:baa0:200:ff:fe0a:1' }, { node_ula: 'FD18:CEF4:6DBD:BAA0:200:FF:FE0A:1' }));
+	assert.ok(!ap.isOwnNode({ mac: '02:00:00:0a:00:00', ula: null }, { ap_mac_id: '02:00:00:0a:00:01', node_ula: 'unknown' }));
+	assert.ok(!ap.isOwnNode({ mac: '', ula: null }, {}));
+	ok('ap: own node matched by MAC or ULA, an empty or unknown status matches nothing');
+
+	// collector with no status output: no row is marked, every ULA stays a link
+	d = await mk({ show_ap_data: addrAll }).fetchData();
+	assert.ok(d.nodes.every((n) => !n.own));
+	assert.strictEqual(ulaLinks(ap.renderData(d)).length, 2);
+	ok('ap: collector without apmond status keeps every ULA a link');
+
+	// non-collector: get_ap_data is this node only, its ULA is plain text, only the "here" link remains
+	const ownReport = {};
+	ownReport['System@02:00:00:0a:00:00'] = JSON.parse(addrAll)['System@02:00:00:0a:00:00'];
+	d = await mk({ show_ap_data: '', get_ap_data: JSON.stringify(ownReport), status: peerStatus }).fetchData();
+	assert.ok(!d.collector && d.nodes.length === 1 && d.nodes[0].own);
+
+	const tp = ap.renderData(Object.assign({}, d, { role: 'peer' }));
+	assert.deepStrictEqual(ulaLinks(tp), [ 'here' ]);
+	assert.ok(text(tp).includes('fd18:cef4:6dbd:baa0:200:ff:fe0a:0'));
+	ok('ap: non-collector single row shows its own ULA as plain text, only the collector link remains');
+
+	// collector: apmond status is read once for this node's identity, not on every refresh
+	let statusCalls = 0;
+	let statusOut = routerStatus;
+	const cached = loadView('accesspoints', { fs: { exec_direct: (cmd, args) => {
+		if (args[0] === 'status') {
+			statusCalls++;
+			return Promise.resolve(statusOut);
+		}
+
+		return Promise.resolve(args[0] === 'show_ap_data' ? addrAll : '');
+	} } });
+
+	await cached.fetchData();
+	d = await cached.fetchData();
+	d = await cached.fetchData();
+	assert.strictEqual(statusCalls, 1);
+	assert.strictEqual(d.nodes.find((n) => n.own).mac, '02:00:00:0a:00:01');
+	ok('ap: collector reads apmond status once, the own row stays marked on later refreshes');
+
+	// status not ready at first: nothing marked, tried again on the next refresh, then kept
+	const retry = loadView('accesspoints', { fs: { exec_direct: (cmd, args) => {
+		if (args[0] === 'status') {
+			statusCalls++;
+			return Promise.resolve(statusOut);
+		}
+
+		return Promise.resolve(args[0] === 'show_ap_data' ? addrAll : '');
+	} } });
+
+	statusCalls = 0;
+	statusOut = '';
+	d = await retry.fetchData();
+	assert.ok(d.nodes.every((n) => !n.own));
+	statusOut = routerStatus;
+	d = await retry.fetchData();
+	d = await retry.fetchData();
+	assert.strictEqual(statusCalls, 2);
+	assert.strictEqual(d.nodes.filter((n) => n.own).length, 1);
+	ok('ap: empty apmond status is not kept, the next refresh reads it again');
+
+	// header cells wrap only between words, data cells may wrap anywhere
+	const heads = find(tc, 'th');
+	assert.ok(heads.every((h) => !/overflow-wrap:anywhere/.test(h.attrs.style)));
+	assert.ok(find(tc, 'td').some((c) => /overflow-wrap:anywhere/.test(c.attrs.style)));
+	ok('ap: column titles are never split inside a word');
 	const acl = JSON.parse(fs.readFileSync(path.join(ROOT, 'root/usr/share/rpcd/acl.d/luci-app-apmond.json')))['luci-app-apmond'].read.file;
 	const st2 = loadView('status', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
 	const lg = loadView('log', { fs: { exec_direct: (cmd, args) => { calls.push(cmd + ' ' + args.join(' ')); return Promise.resolve(''); } } });
