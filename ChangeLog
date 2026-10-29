@@ -1,3 +1,16 @@
+luci-app-apmond (2.0.0beta)
+  * Change - for apmond 2.x: every page reads the apmond ubus object through rpcd (rpc.declare) instead of running the apmond script; needs apmond 2.0 or later [bluewavenet]
+  * Change - ACL: ubus apmond status, nodes, node, clients (read) and forget (write), uci apmond, and only /usr/sbin/apmond read_log as a command [bluewavenet]
+  * Add - common.js with the ubus calls, formatting and the version footer (luci-app-apmond and apmond package version with build commit), replaces version.js [bluewavenet]
+  * Add - Status: grouped tables, warnings for restart needed, clock not synced and a rejected last report [bluewavenet]
+  * Add - Access points: state ok/late/lost with report age, apmond package version with restart needed, radios with SSID and VLAN per AP, VXLAN and last seen per client, late/lost nodes and stale clients greyed out, Forget for lost nodes and stale clients, nodes on the default passphrase listed [bluewavenet]
+  * Add - Clients page: every client of every node in one list with a filter, Forget for stale clients [bluewavenet]
+  * Add - Log: Follow button, re-reads the log every 10 seconds [bluewavenet]
+  * Fix - Makefile: no .js.o files are left in the package when jsmin is missing [bluewavenet]
+  * Change - Settings: the apmond 2.x options (role, port, collector, interface, netdev, key_epoch, prev_epoch_grace, client_stale_timeout, max_message_size), 1.x only options removed, passphrase as a password field; Save & Apply restarts apmond through its reload trigger [bluewavenet]
+
+ -- Rob White <dot@blue-wave.net>  Thu, 29 Oct 2026 23:00:00 +0000
+
 luci-app-apmond (1.0.1)
   * Add - version and last_version in one place (view/apmond/version.js), shown at the foot of each ApmonD page with the installed apmond version from apmond -v, unknown if apmond has no -v [bluewavenet]
   * Add - Access points: ULA and IPv4 address columns for each AP, the ULA links to that AP's Access points page in a new window, older apmond and mesh11sd APs show - with no link [bluewavenet]

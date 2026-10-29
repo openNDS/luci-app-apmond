@@ -1,11 +1,1 @@
-Sun Oct 25 19:21:57 GMT 2026 daemon.warn apmond[533581]: [1] apmond - Bad signature from [ t3 ] id [ 0200000a0000 ] - rejecting attempted apmond server access
-Sun Oct 25 19:21:57 GMT 2026 daemon.warn apmond[533715]: [1] apmond - Bad signature from [ t4 ] id [ 0200000a0000 ] - rejecting attempted apmond server access
-Sun Oct 25 19:21:57 GMT 2026 daemon.warn apmond[533849]: [1] apmond - Bad signature from [ t5 ] id [ 0200000a0000 ] - rejecting attempted apmond server access
-Sun Oct 25 19:21:57 GMT 2026 daemon.warn apmond[533983]: [1] apmond - Bad signature from [ t6 ] id [ 0200000a0000 ] - rejecting attempted apmond server access
-Sun Oct 25 19:21:58 GMT 2026 daemon.warn apmond[534120]: [1] apmond - Bad signature from [ t7 ] id [ 0200000a0000 ] - rejecting attempted apmond server access
-Sun Oct 25 19:21:58 GMT 2026 daemon.warn apmond[534263]: [1] apmond - Bad signature from [ t8 ] id [ 0200000a0000 ] - rejecting attempted apmond server access
-Sun Oct 25 19:22:00 GMT 2026 daemon.notice apmond[539082]: [1] apmond - ULA address fd18:cef4:6dbd:baa0::1/64 deleted from apmbr1
-Sun Oct 25 19:22:00 GMT 2026 daemon.notice apmond[539082]: [2] apmond - ULA address fd18:cef4:6dbd:baa0:200:ff:fe0a:1/64 deleted from apmbr1
-Sun Oct 25 19:22:35 GMT 2026 daemon.notice apmond[548588]: [2] apmond - ULA address fd18:cef4:6dbd:baa0::1/64 added to apmbr1
-Sun Oct 25 19:22:35 GMT 2026 daemon.notice apmond[548588]: [3] apmond - role change [ none ] -> [ router ]: upstream gateway detected and fd18:cef4:6dbd:baa0::1 claimed (collector)
-Sun Oct 25 19:22:35 GMT 2026 daemon.notice apmond[548588]: [4] apmond - ULA address fd18:cef4:6dbd:baa0:200:ff:fe0a:1/64 added to apmbr1
+Thu Oct 29 22:19:32 2026 apmond[14515]: notice: report from fd46:cfe5:34c5:6ddd:9683:c4ff:fe2e:f9d1 accepted

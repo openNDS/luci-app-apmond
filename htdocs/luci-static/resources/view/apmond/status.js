@@ -1,231 +1,269 @@
 'use strict';
 'require view';
-'require fs';
-'require ui';
 'require poll';
 'require dom';
-'require view.apmond.version as apmondver';
+'require view.apmond.common as common';
 
 /*
- * ApmonD status: "apmond status" prints JSON, { "apmond_status": { key: value, ... } }.
- * Values are strings, except bridges and protocol_mismatch_nodes (arrays), and
- * ula_addresses and last_send (objects).
+ * ApmonD status: "ubus call apmond status", refreshed every 10 seconds, in groups.
+ * Fields not known to this page are listed at the end of the last group, so a newer apmond
+ * still shows everything.
  */
 
-var APMOND = '/usr/sbin/apmond';
+var DEBUGLEVEL = {
+	'0': _('errors'),
+	'1': _('notices'),
+	'2': _('info'),
+	'3': _('debug')
+};
 
-/* display order and labels; keys not listed here are shown after these, under their own name */
-var LABELS = [
-	[ 'apmond_version', _('Version') ],
-	[ 'apmond_protocol', _('Protocol') ],
-	[ 'enabled', _('Enabled') ],
-	[ 'daemon_running', _('Daemon running') ],
-	[ 'daemon_pid', _('Daemon PID') ],
-	[ 'role', _('Role') ],
-	[ 'role_reason', _('Role reason') ],
-	[ 'router_detect', _('Router detection') ],
-	[ 'default_passphrase', _('Default passphrase in use') ],
-	[ 'collector', _('Collector address') ],
-	[ 'node_ula', _('Node address') ],
-	[ 'ula_prefix', _('ULA prefix') ],
-	[ 'ula_subnet', _('ULA subnet') ],
-	[ 'ula_addresses', _('ULA addresses') ],
-	[ 'device', _('Device') ],
-	[ 'ap_mac_id', _('Access point ID') ],
-	[ 'bridge_detect', _('Wired client bridges') ],
-	[ 'bridges', _('Bridges scanned') ],
-	[ 'interval_seconds', _('Report interval (s)') ],
-	[ 'debuglevel', _('Debug level') ],
-	[ 'last_send', _('Last report sent') ],
-	[ 'access_points_with_data', _('Access points with data') ],
-	[ 'protocol_mismatch_nodes', _('Protocol mismatch nodes') ],
-	[ 'log_mountpoint', _('Log mountpoint') ],
-	[ 'ap_data_dir', _('Access point data directory') ],
-	[ 'log_file', _('Log file') ],
-	[ 'logging', _('Logging') ],
-	[ 'cgi_dir', _('CGI directory') ],
-	[ 'runtime_dir', _('Runtime directory') ],
-	[ 'checksum', _('Running checksum') ],
-	[ 'installed_checksum', _('Installed checksum') ]
+var GROUPS = [
+	[ _('Daemon'), [
+		[ 'package_version', _('Package version') ],
+		[ 'version', _('Version') ],
+		[ 'build_commit', _('Build commit') ],
+		[ 'protocol', _('Protocol') ],
+		[ 'running_sha256', _('Running binary sha256') ],
+		[ 'installed_sha256', _('Installed binary sha256') ],
+		[ 'restart_needed', _('Restart needed') ],
+		[ 'debuglevel', _('Debug level') ]
+	] ],
+	[ _('Role and addresses'), [
+		[ 'role', _('Role') ],
+		[ 'role_reason', _('Role reason') ],
+		[ 'id', _('Node ID') ],
+		[ 'node_ula', _('Node address') ],
+		[ 'collector_ula', _('Collector address') ],
+		[ 'collector', _('Collector in use') ],
+		[ 'collector_via', _('Collector found via') ],
+		[ 'port', _('Port') ],
+		[ 'key_epoch', _('Key epoch') ],
+		[ 'default_passphrase', _('Default passphrase in use') ]
+	] ],
+	[ _('Reports'), [
+		[ 'clock_synced', _('Clock synced with the collector') ],
+		[ 'reports_sent', _('Reports sent') ],
+		[ 'reports_failed', _('Reports failed') ],
+		[ 'last_status', _('Last report HTTP status') ],
+		[ 'blocks', _('Extension blocks') ]
+	] ],
+	[ _('Collector'), [
+		[ 'nodes', _('Nodes') ],
+		[ 'clients', _('Clients') ],
+		[ 'collector_counters', _('Counters') ]
+	] ]
 ];
 
-/* keys that only exist to carry a warning, shown in the warning box rather than the table */
-var WARNING_KEYS = [ 'checksum_warning', 'storage_warning' ];
-
-/* keys that carry an informational note, shown in a plain notice box rather than the table */
-var NOTE_KEYS = [ 'passphrase_warning' ];
-
-var ROUTER_DETECT = { '0': _('force router/collector'), '1': _('auto detect'), '2': _('force peer') };
-var DEBUGLEVEL = { '0': _('errors'), '1': _('notices'), '2': _('info'), '3': _('debug') };
+/* shown as notes or warnings above the tables, not as rows */
+var SKIP = {
+	'passphrase_warning': true
+};
 
 return view.extend({
-	/* run "apmond status"; resolves to the raw text, or null if it could not be run */
-	fetchStatus: function() {
-		return L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null);
-	},
-
-	/* parse the status text: returns the apmond_status object, or null */
-	parseStatus: function(text) {
-		var obj;
-
-		if (text == null || String(text).trim() === '')
-			return null;
-
-		try {
-			obj = JSON.parse(text);
-		}
-		catch (e) {
-			return null;
-		}
-
-		return (obj && typeof(obj.apmond_status) == 'object') ? obj.apmond_status : null;
-	},
-
-	/* list of informational notes for a parsed status (the default passphrase) */
+	/* notes: the default passphrase */
 	statusNotes: function(st) {
 		var n = [];
 
-		NOTE_KEYS.forEach(function(k) {
-			if (st[k])
-				n.push(String(st[k]));
-		});
-
-		if (st.default_passphrase == 'yes' && !st.passphrase_warning)
-			n.push(_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase in Settings, the same on every node.'));
+		if (st.default_passphrase === true) {
+			if (st.passphrase_warning) {
+				n.push(String(st.passphrase_warning));
+			}
+			else {
+				n.push(_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase in Settings, the same on every node.'));
+			}
+		}
 
 		return n;
 	},
 
-	/* list of warning strings for a parsed status */
+	/* warnings: restart needed, clock, failing reports */
 	statusWarnings: function(st) {
 		var w = [];
 
-		WARNING_KEYS.forEach(function(k) {
-			if (st[k])
-				w.push(String(st[k]));
-		});
+		if (st.restart_needed === true) {
+			w.push(_('The apmond binary has been replaced since the daemon started. Restart apmond to run the installed version.'));
+		}
 
-		if (typeof(st.logging) == 'string' && st.logging.indexOf('DISABLED') == 0)
-			w.push(st.logging);
+		if (st.role != 'collector' && st.clock_synced === false) {
+			w.push(_('The clock is not synced with the collector yet, so reports cannot be sent.'));
+		}
 
-		if (Array.isArray(st.protocol_mismatch_nodes) && st.protocol_mismatch_nodes.length)
-			w.push(_('These nodes report a different apmond protocol, upgrade apmond on them: %s').format(st.protocol_mismatch_nodes.join(', ')));
-
-		if (st.enabled == '1' && st.daemon_running == 'no')
-			w.push(_('ApmonD is enabled but the daemon is not running.'));
+		if (st.last_status != null && st.last_status != 200) {
+			w.push(_('The last report was not accepted by the collector (HTTP status %s). Check that every node has the same passphrase, port and key epoch.').format(st.last_status));
+		}
 
 		return w;
 	},
 
-	/* is this key a problem that should be highlighted in the table? */
-	isWarningKey: function(st, key) {
-		switch (key) {
-		case 'checksum':
-		case 'installed_checksum':
-			return !!st.checksum_warning;
-		case 'log_mountpoint':
-		case 'ap_data_dir':
-			return !!st.storage_warning;
-		case 'logging':
-			return typeof(st.logging) == 'string' && st.logging.indexOf('DISABLED') == 0;
-		case 'protocol_mismatch_nodes':
-			return Array.isArray(st.protocol_mismatch_nodes) && st.protocol_mismatch_nodes.length > 0;
-		case 'daemon_running':
-			return st.enabled == '1' && st.daemon_running == 'no';
+	/* is this row a problem that should be highlighted? */
+	isWarning: function(st, key) {
+		if (key == 'restart_needed') {
+			return st.restart_needed === true;
+		}
+		if (key == 'default_passphrase') {
+			return st.default_passphrase === true;
+		}
+		if (key == 'last_status') {
+			return st.last_status != null && st.last_status != 200;
+		}
+		if (key == 'clock_synced') {
+			return st.clock_synced === false;
 		}
 		return false;
 	},
 
 	/* one value as display text */
 	formatValue: function(key, v) {
-		if (v == null)
-			return '';
+		var parts;
 
-		if (key == 'router_detect' && ROUTER_DETECT[v])
-			return '%s (%s)'.format(v, ROUTER_DETECT[v]);
+		if (v == null) {
+			return '-';
+		}
 
-		if (key == 'debuglevel' && DEBUGLEVEL[v])
-			return '%s (%s)'.format(v, DEBUGLEVEL[v]);
+		if (key == 'debuglevel' && DEBUGLEVEL[String(v)]) {
+			return '%s (%s)'.format(v, DEBUGLEVEL[String(v)]);
+		}
 
-		if (key == 'last_send' && typeof(v) == 'object')
-			return _('%s, status %s, return code %s, %s bytes').format(v.date_time || '?', v.status || '?', v.retcode || '?', v.bytes || '?');
+		if (key == 'blocks' && Array.isArray(v)) {
+			if (!v.length) {
+				return _('none');
+			}
+			parts = v.map(function(b) {
+				if (b && typeof(b) == 'object' && b.name) {
+					return b.name;
+				}
+				return JSON.stringify(b);
+			});
+			return parts.join(', ');
+		}
 
-		if (Array.isArray(v))
-			return v.length ? v.join(', ') : _('none');
+		if (v === true) {
+			return _('yes');
+		}
+		if (v === false) {
+			return _('no');
+		}
 
-		if (typeof(v) == 'object')
-			return Object.keys(v).map(function(k) {
-				return '%s: %s'.format(k, Array.isArray(v[k]) && v[k].length ? v[k].join(', ') : _('none'));
-			}).join('; ');
+		if (Array.isArray(v)) {
+			if (!v.length) {
+				return _('none');
+			}
+			return v.join(', ');
+		}
+
+		if (typeof(v) == 'object') {
+			parts = Object.keys(v).map(function(k) {
+				return '%s: %s'.format(k, JSON.stringify(v[k]));
+			});
+			return parts.join(', ');
+		}
 
 		return String(v);
 	},
 
-	/* [ [ key, label, text, warn ], ... ] in display order */
-	statusRows: function(st) {
-		var self = this, rows = [], seen = {};
+	/* [ [ title, [ [ key, label, text, warn ], ... ] ], ... ], groups without rows left out */
+	statusGroups: function(st) {
+		var self = this;
+		var seen = {};
+		var out = [];
+		var extra = [];
 
-		LABELS.forEach(function(l) {
-			seen[l[0]] = true;
-			if (st[l[0]] !== undefined)
-				rows.push([ l[0], l[1], self.formatValue(l[0], st[l[0]]), self.isWarningKey(st, l[0]) ]);
+		GROUPS.forEach(function(g) {
+			var rows = [];
+
+			g[1].forEach(function(l) {
+				seen[l[0]] = true;
+				if (st[l[0]] !== undefined) {
+					rows.push([ l[0], l[1], self.formatValue(l[0], st[l[0]]), self.isWarning(st, l[0]) ]);
+				}
+			});
+
+			if (rows.length) {
+				out.push([ g[0], rows ]);
+			}
 		});
-
-		WARNING_KEYS.concat(NOTE_KEYS).forEach(function(k) { seen[k] = true; });
 
 		Object.keys(st).forEach(function(k) {
-			if (!seen[k])
-				rows.push([ k, k, self.formatValue(k, st[k]), false ]);
+			if (!seen[k] && !SKIP[k]) {
+				extra.push([ k, k, self.formatValue(k, st[k]), false ]);
+			}
 		});
 
-		return rows;
+		if (extra.length) {
+			out.push([ _('Other'), extra ]);
+		}
+
+		return out;
 	},
 
-	renderStatus: function(text) {
-		var st = this.parseStatus(text);
+	renderTable: function(rows) {
+		return E('table', { 'class': 'table' }, rows.map(function(r) {
+			var style = 'overflow-wrap:anywhere';
 
-		if (st == null)
-			return E('div', { 'class': 'alert-message error' },
-				_('Could not read the ApmonD status. Is apmond installed?'));
+			if (r[3]) {
+				style = style + ';color:#c00;font-weight:bold';
+			}
 
-		var warnings = this.statusWarnings(st),
-		    notes = this.statusNotes(st);
-
-		var table = E('table', { 'class': 'table' }, this.statusRows(st).map(function(r) {
 			return E('tr', { 'class': 'tr' }, [
 				E('td', { 'class': 'td left', 'width': '33%' }, [ r[1] ]),
-				E('td', { 'class': 'td left', 'style': r[3] ? 'color:#c00;font-weight:bold' : null }, [ r[2] ])
+				E('td', { 'class': 'td left', 'style': style }, [ r[2] ])
 			]);
 		}));
+	},
 
-		return E('div', {}, [
-			notes.length ? E('div', { 'class': 'alert-message notice' },
-				notes.map(function(n) { return E('p', {}, [ n ]); })) : '',
-			warnings.length ? E('div', { 'class': 'alert-message warning' },
-				warnings.map(function(w) { return E('p', {}, [ w ]); })) : '',
-			table
-		]);
+	renderStatus: function(st) {
+		var self = this;
+		var notes;
+		var warnings;
+		var out = [];
+
+		if (st == null) {
+			return E('div', { 'class': 'alert-message error' },
+				_('Could not read the ApmonD status. Is apmond installed, enabled and running?'));
+		}
+
+		notes = this.statusNotes(st);
+		warnings = this.statusWarnings(st);
+
+		if (notes.length) {
+			out.push(E('div', { 'class': 'alert-message notice' }, notes.map(function(n) {
+				return E('p', {}, [ n ]);
+			})));
+		}
+
+		if (warnings.length) {
+			out.push(E('div', { 'class': 'alert-message warning' }, warnings.map(function(w) {
+				return E('p', {}, [ w ]);
+			})));
+		}
+
+		this.statusGroups(st).forEach(function(g) {
+			out.push(E('h3', {}, [ g[0] ]));
+			out.push(self.renderTable(g[1]));
+		});
+
+		return E('div', {}, out);
 	},
 
 	load: function() {
-		return this.fetchStatus();
+		return common.getStatus();
 	},
 
-	render: function(text) {
-		var self = this,
-		    box = E('div', { 'id': 'apmond-status' }, [ this.renderStatus(text) ]);
+	render: function(st) {
+		var self = this;
+		var box = E('div', { 'id': 'apmond-status' }, [ this.renderStatus(st) ]);
 
 		poll.add(function() {
-			return self.fetchStatus().then(function(t) {
-				dom.content(box, self.renderStatus(t));
+			return common.getStatus().then(function(s) {
+				dom.content(box, self.renderStatus(s));
 			});
 		}, 10);
 
 		return E('div', { 'class': 'cbi-map' }, [
 			E('h2', {}, [ _('ApmonD Status') ]),
-			E('div', { 'class': 'cbi-map-descr' }, [ _('The output of "apmond status", refreshed every 10 seconds.') ]),
+			E('div', { 'class': 'cbi-map-descr' }, [ _('The status of apmond on this node, refreshed every 10 seconds.') ]),
 			box,
-			apmondver.footer()
+			common.footer()
 		]);
 	},
 

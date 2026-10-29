@@ -1,0 +1,144 @@
+{
+	"nodes": [
+		{
+			"node_mac": "94:83:c4:52:68:73",
+			"hostname": "OpenWrt-6873",
+			"model": "GL-MT300N-V2",
+			"apmond_version": "2.0.0beta",
+			"package_version": "2.0.0_beta-r14",
+			"build_commit": "66a4b9e",
+			"running_sha256": "6965f52e40d32867a687137287371b21ed18898aa18cd5ed4c893ede92fdb2b5",
+			"installed_sha256": "6965f52e40d32867a687137287371b21ed18898aa18cd5ed4c893ede92fdb2b5",
+			"restart_needed": false,
+			"openwrt_release": "25.12.5",
+			"role": "collector",
+			"uptime_s": 526811,
+			"load": [
+				"0.20",
+				"0.31",
+				"0.40"
+			],
+			"free_ram_kb": 74712,
+			"free_flash_kb": 8988,
+			"cpu_temperature_c": null,
+			"cpu_frequency_mhz": null,
+			"ipv4_addresses": [
+				"192.168.10.1/24"
+			],
+			"node_ula": "fd46:cfe5:34c5:6ddd:9683:c4ff:fe52:6873",
+			"state": "ok",
+			"age_s": 16,
+			"last_report": 1793312372,
+			"last_report_date": "Thu_Oct_29_22:19:32_GMT_2026",
+			"source": "local",
+			"reports": 65,
+			"lost_reports": 0,
+			"default_passphrase": true,
+			"client_count": 1,
+			"radios": [
+				{
+					"phy": "phy0",
+					"channel": 1,
+					"frequency_mhz": 2412,
+					"htmode": "HT20",
+					"txpower_dbm": 20,
+					"aps": [
+						{
+							"ifname": "phy0-ap0",
+							"ssid": "House-6873",
+							"bssid": "96:83:C4:52:68:73",
+							"vlan": 10,
+							"vxlan": null
+						},
+						{
+							"ifname": "phy0-ap1",
+							"ssid": "guest-6873",
+							"bssid": "92:83:C4:52:68:73",
+							"vlan": 20,
+							"vxlan": null
+						}
+					]
+				}
+			],
+			"blocks": {},
+			"clients": [
+				{
+					"client_mac": "1c:86:0b:36:3f:dd",
+					"kind": "wired",
+					"state": "active",
+					"last_seen": 1793312372,
+					"last_seen_date": "Thu_Oct_29_22:19:32_GMT_2026",
+					"last_seen_age_s": 16,
+					"bridge": "br-lan",
+					"port": "eth0.1",
+					"vlan": 10,
+					"vxlan": null,
+					"speed_mbps": 100
+				}
+			]
+		},
+		{
+			"node_mac": "94:83:c4:2e:f9:d1",
+			"hostname": "OpenWrt-f9d1",
+			"model": "GL-MT300N-V2",
+			"apmond_version": "2.0.0beta",
+			"package_version": "2.0.0_beta-r14",
+			"build_commit": "66a4b9e",
+			"running_sha256": "6965f52e40d32867a687137287371b21ed18898aa18cd5ed4c893ede92fdb2b5",
+			"installed_sha256": "6965f52e40d32867a687137287371b21ed18898aa18cd5ed4c893ede92fdb2b5",
+			"restart_needed": false,
+			"openwrt_release": "25.12.5",
+			"role": "peer",
+			"uptime_s": 47615,
+			"load": [
+				"0.51",
+				"0.35",
+				"0.34"
+			],
+			"free_ram_kb": 79724,
+			"free_flash_kb": 9464,
+			"cpu_temperature_c": null,
+			"cpu_frequency_mhz": null,
+			"ipv4_addresses": [
+				"192.168.10.173/24"
+			],
+			"node_ula": "fd46:cfe5:34c5:6ddd:9683:c4ff:fe2e:f9d1",
+			"state": "ok",
+			"age_s": 22,
+			"last_report": 1793312367,
+			"last_report_date": "Thu_Oct_29_22:19:27_GMT_2026",
+			"source": "fd46:cfe5:34c5:6ddd:9683:c4ff:fe2e:f9d1",
+			"reports": 62,
+			"lost_reports": 0,
+			"default_passphrase": true,
+			"client_count": 0,
+			"radios": [
+				{
+					"phy": "phy0",
+					"channel": 1,
+					"frequency_mhz": 2412,
+					"htmode": "HT20",
+					"txpower_dbm": 20,
+					"aps": [
+						{
+							"ifname": "phy0-ap0",
+							"ssid": "House-f9d1",
+							"bssid": "96:83:C4:2E:F9:D1",
+							"vlan": 10,
+							"vxlan": null
+						},
+						{
+							"ifname": "phy0-ap1",
+							"ssid": "guest-f9d1",
+							"bssid": "92:83:C4:2E:F9:D1",
+							"vlan": 20,
+							"vxlan": null
+						}
+					]
+				}
+			],
+			"blocks": {},
+			"clients": []
+		}
+	]
+}

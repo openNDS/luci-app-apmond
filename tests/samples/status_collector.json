@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0beta",
+	"package_version": "2.0.0_beta-r14",
+	"build_commit": "66a4b9e",
+	"running_sha256": "6965f52e40d32867a687137287371b21ed18898aa18cd5ed4c893ede92fdb2b5",
+	"installed_sha256": "6965f52e40d32867a687137287371b21ed18898aa18cd5ed4c893ede92fdb2b5",
+	"restart_needed": false,
+	"protocol": 2,
+	"id": "94:83:c4:52:68:73",
+	"role": "collector",
+	"port": 2468,
+	"key_epoch": 0,
+	"default_passphrase": true,
+	"passphrase_warning": "The built-in default passphrase is in use. Set option apmon_seed in /etc/config/apmond (the same on every node) to secure apmond",
+	"role_reason": "collector: upstream gateway detected and fd46:cfe5:34c5:6ddd::1 claimed",
+	"node_ula": "fd46:cfe5:34c5:6ddd:9683:c4ff:fe52:6873",
+	"collector_ula": "fd46:cfe5:34c5:6ddd::1",
+	"clock_synced": true,
+	"reports_sent": 65,
+	"reports_failed": 0,
+	"last_status": 200,
+	"debuglevel": 3,
+	"blocks": [],
+	"collector_counters": {
+		"accepted": 129,
+		"auth_failed": 0,
+		"rejected_time_or_replay": 0,
+		"malformed": 0
+	},
+	"nodes": 2,
+	"clients": 1
+}

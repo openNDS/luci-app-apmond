@@ -1,8 +1,6 @@
-Sample output captured from the apmond 1.0.0 mock test harness (openNDS/apmond tests/run-mock-test.sh):
-router `status`, peer `status`, `show_ap_data all` on the collector, `get_ap_data` on a peer and `read_log`.
-`apmond.config` is the shipped /etc/config/apmond of apmond 1.0.0.
-`get_ap_data_gl-mt300n-v2.json` is real r22 output from a GL-MT300N-V2 peer (guest client on VLAN 20).
-The test work directory in the paths was renamed to /tmp/apmond-test.
-`show_ap_data_addresses.json` is `show_ap_data all` from the apmond 1.0.1 mock test harness (section 15e) with the
-node_ula and ipv4_addresses node_status fields: peer C with two IPv4 addresses, router R with none. The random test
-ULA prefix was renamed to fd18:cef4:6dbd:baa0 as in the other samples.
+apmond 2.0.0_beta-r14 ubus output on Rob's GL-MT300N-V2 test pair, 29 Oct 2026:
+`status_collector.json`, `nodes_collector.json` and `clients_collector.json` (`include_stale`) from
+the collector (portal), `status_sender.json` from the sender (peer).
+`nodes_lost_stale.json` is `nodes_collector.json` edited by hand: the peer is lost and needs a
+restart, with one stale Wi-Fi client on a VXLAN (fields as docs/PROTOCOL.md), since the live pair
+had no Wi-Fi client at the time. `read_log.txt` is one made-up log line.

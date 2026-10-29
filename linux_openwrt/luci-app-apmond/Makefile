@@ -6,7 +6,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-apmond
-PKG_VERSION:=1.0.1
+PKG_VERSION:=2.0.0_beta
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
@@ -15,7 +15,7 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/openNDS/luci-app-apmond/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=#shasum -a 256 of tar.gz of source files goes here
+PKG_HASH:=skip
 
 # The source is in the release tarball, not next to this Makefile, so luci.mk (which packages
 # the files beside the Makefile) is not used. This does what luci.mk does for this app:
@@ -29,14 +29,15 @@ define Package/luci-app-apmond
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
-  TITLE:=LuCI support for ApmonD
+  TITLE:=LuCI support for ApmonD 2.x
   PKGARCH:=all
   DEPENDS:=+luci-base +apmond
   URL:=https://github.com/openNDS/luci-app-apmond
 endef
 
 define Package/luci-app-apmond/description
-  Settings, status, access point reports and log for ApmonD, the access point monitoring daemon
+  Settings, status, access points, clients and log for ApmonD 2.x, the access point
+  monitoring daemon. Reads apmond over ubus (rpcd); needs apmond 2.0 or later.
 endef
 
 define Build/Compile
@@ -46,7 +47,11 @@ define Package/luci-app-apmond/install
 	$(INSTALL_DIR) $(1)/www/luci-static/resources/view/apmond
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/htdocs/luci-static/resources/view/apmond/*.js $(1)/www/luci-static/resources/view/apmond/
 	$(if $(CONFIG_LUCI_JSMIN),$(FIND) $(1)/www -type f -name '*.js' | while read src; do \
-		if jsmin < "$$$$src" > "$$$$src.o"; then mv "$$$$src.o" "$$$$src"; fi; \
+		if jsmin < "$$$$src" > "$$$$src.o"; then \
+			mv "$$$$src.o" "$$$$src"; \
+		else \
+			rm -f "$$$$src.o"; \
+		fi; \
 	done)
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/root/usr/share/luci/menu.d/luci-app-apmond.json $(1)/usr/share/luci/menu.d/

@@ -1,539 +1,752 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:150
-msgid "%s, status %s, return code %s, %s bytes"
+#: htdocs/luci-static/resources/view/apmond/common.js:190
+msgid "%sd ago"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:282
-msgid "(per port)"
+#: htdocs/luci-static/resources/view/apmond/common.js:188
+msgid "%sh ago"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:85
+#: htdocs/luci-static/resources/view/apmond/common.js:185
+msgid "%sm ago"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:182
+msgid "%ss ago"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:179
+msgid "(restart needed)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:114
 msgid "0 - errors"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:86
+#: htdocs/luci-static/resources/view/apmond/settings.js:115
 msgid "1 - notices"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:87
+#: htdocs/luci-static/resources/view/apmond/settings.js:116
 msgid "2 - info"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:88
+#: htdocs/luci-static/resources/view/apmond/settings.js:117
 msgid "3 - debug"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:101
+#: htdocs/luci-static/resources/view/apmond/settings.js:163
 msgid ""
-"A backed-off router takes over the collector address after it has not "
+"A backed-off collector takes over the collector address after it has not "
 "answered this many checks. Default 3."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:33
-msgid "Access point ID"
+#: htdocs/luci-static/resources/view/apmond/common.js:291
+msgid "ACK signal"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:42
-msgid "Access point data directory"
-msgstr ""
-
-#: applications/luci-app-apmond/root/usr/share/luci/menu.d/luci-app-apmond.json:34
+#: root/usr/share/luci/menu.d/luci-app-apmond.json:19
 msgid "Access points"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:361
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:424
 msgid ""
 "Access points that have reported to this node, the collector. Click \"Show "
-"clients\" to see the clients of an access point."
+"clients\" for the radios and clients of an access point. Late and lost nodes "
+"and stale clients are greyed out."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:39
-msgid "Access points with data"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:58
+#: htdocs/luci-static/resources/view/apmond/settings.js:89
 msgid "Advanced Settings"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:154
-msgid "Also log the full user agent and node id strings at debug level 3."
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:50
-#: applications/luci-app-apmond/root/usr/share/luci/menu.d/luci-app-apmond.json:3
+#: htdocs/luci-static/resources/view/apmond/settings.js:81
+#: root/usr/share/luci/menu.d/luci-app-apmond.json:43
 msgid "ApmonD"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:386
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:453
 msgid "ApmonD Access Points"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/log.js:35
+#: htdocs/luci-static/resources/view/apmond/clients.js:179
+msgid "ApmonD Clients"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/log.js:72
 msgid "ApmonD Log"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:224
+#: htdocs/luci-static/resources/view/apmond/status.js:263
 msgid "ApmonD Status"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:114
-msgid "ApmonD is enabled but the daemon is not running."
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:51
+#: htdocs/luci-static/resources/view/apmond/settings.js:82
 msgid ""
 "ApmonD monitors the access points of your network. Every node, the access "
 "points and the router, runs the same daemon and should have identical "
-"settings."
+"settings. Save & Apply restarts apmond on this node."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:95
+#: htdocs/luci-static/resources/view/apmond/settings.js:108
 msgid "Auto detect"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:35
-msgid "Bridges scanned"
+#: htdocs/luci-static/resources/view/apmond/status.js:24
+msgid "Build commit"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:81
-msgid ""
-"Bridges scanned for wired clients. Leave empty or use \"auto\" to scan every "
-"bridge except the wan bridge, detected again on each pass, or list bridge "
-"names to scan only those."
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:172
+msgid "Build commit %s"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:129
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:45
-msgid "CGI directory"
+#: htdocs/luci-static/resources/view/apmond/settings.js:145
+msgid "Change it on every node together with a new passphrase. Default 0."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:301
+#: htdocs/luci-static/resources/view/apmond/clients.js:89
+#: htdocs/luci-static/resources/view/apmond/clients.js:111
+msgid "Client MAC"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:374
+#: htdocs/luci-static/resources/view/apmond/status.js:52
+#: root/usr/share/luci/menu.d/luci-app-apmond.json:27
 msgid "Clients"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:27
+#: htdocs/luci-static/resources/view/apmond/status.js:44
+msgid "Clock synced with the collector"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:50
+msgid "Collector"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:125
+#: htdocs/luci-static/resources/view/apmond/status.js:36
 msgid "Collector address"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:280
-msgid "Connected"
+#: htdocs/luci-static/resources/view/apmond/status.js:38
+msgid "Collector found via"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/log.js:18
+#: htdocs/luci-static/resources/view/apmond/status.js:37
+msgid "Collector in use"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:148
+msgid ""
+"Collector: also accept the previous key epoch for this many seconds after "
+"start, while the nodes change over. Default 0."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:154
+msgid ""
+"Collector: reports whose time differs from the collector by more than this "
+"many seconds are rejected. Default 120."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:151
+msgid ""
+"Collector: seconds a client that has gone from its node's report is kept, "
+"greyed out, before it is removed. Default 600."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:157
+msgid "Collector: the largest accepted report, in bytes. Default 262144."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:97
+#: htdocs/luci-static/resources/view/apmond/clients.js:31
+msgid "Could not forget %s: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/log.js:24
 msgid "Could not read the ApmonD log. Is apmond installed?"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:188
-msgid "Could not read the ApmonD status. Is apmond installed?"
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:402
+#: htdocs/luci-static/resources/view/apmond/clients.js:135
+#: htdocs/luci-static/resources/view/apmond/status.js:222
+msgid ""
+"Could not read the ApmonD status. Is apmond installed, enabled and running?"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:22
-msgid "Daemon PID"
+#: htdocs/luci-static/resources/view/apmond/status.js:53
+msgid "Counters"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:21
-msgid "Daemon running"
+#: htdocs/luci-static/resources/view/apmond/status.js:21
+msgid "Daemon"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:84
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:37
+#: htdocs/luci-static/resources/view/apmond/settings.js:113
+#: htdocs/luci-static/resources/view/apmond/status.js:29
 msgid "Debug level"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:26
+#: htdocs/luci-static/resources/view/apmond/status.js:41
 msgid "Default passphrase in use"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:148
-msgid "Default passphrase warning interval"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:76
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:32
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:373
+#: htdocs/luci-static/resources/view/apmond/settings.js:139
 msgid "Device"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:62
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:20
+#: htdocs/luci-static/resources/view/apmond/settings.js:93
 msgid "Enabled"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:97
-msgid "Force peer"
+#: htdocs/luci-static/resources/view/apmond/clients.js:180
+msgid ""
+"Every client of every access point, refreshed every 30 seconds. Stale "
+"clients are greyed out."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:96
-msgid "Force router/collector"
+#: htdocs/luci-static/resources/view/apmond/status.js:48
+msgid "Extension blocks"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
+#: htdocs/luci-static/resources/view/apmond/clients.js:163
+msgid "Filter"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/log.js:66
+#: htdocs/luci-static/resources/view/apmond/log.js:69
+msgid "Follow"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:109
+msgid "Force collector"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:110
+msgid "Force sender"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:100
+#: htdocs/luci-static/resources/view/apmond/clients.js:34
+msgid "Forget"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:374
 msgid "Free RAM"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:57
+#: htdocs/luci-static/resources/view/apmond/settings.js:88
 msgid "General Settings"
 msgstr ""
 
-#: applications/luci-app-apmond/root/usr/share/rpcd/acl.d/luci-app-apmond.json:3
-msgid "Grant access to ApmonD settings, status, access point data and log"
+#: root/usr/share/rpcd/acl.d/luci-app-apmond.json:3
+msgid "Grant access to ApmonD settings, status, access points, clients and log"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:311
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:313
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:336
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:343
 msgid "Hide clients"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:67
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:373
+msgid "IPv4 address"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:99
 msgid ""
-"Identical on every node. The report signing secret and the IPv6 ULA prefix "
-"are both derived from it. While it is empty a built-in default is used. Make "
-"ApmonD more secure by adding your own passphrase."
+"Identical on every node. The encryption keys and the IPv6 ULA prefix are "
+"both derived from it. While it is empty a built-in default is used, which "
+"gives no real protection."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:48
-msgid "Installed checksum"
+#: htdocs/luci-static/resources/view/apmond/status.js:27
+msgid "Installed binary sha256"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:144
-msgid "Largest accepted report, in hex characters. Default 1048576."
+#: htdocs/luci-static/resources/view/apmond/settings.js:130
+msgid "Interface"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:38
-msgid "Last report sent"
+#: htdocs/luci-static/resources/view/apmond/settings.js:140
+msgid ""
+"Its MAC address identifies this node, and its bridge forwarding table gives "
+"the wired clients. Default br-lan."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
-msgid "Load"
+#: htdocs/luci-static/resources/view/apmond/settings.js:144
+#: htdocs/luci-static/resources/view/apmond/status.js:40
+msgid "Key epoch"
 msgstr ""
 
-#: applications/luci-app-apmond/root/usr/share/luci/menu.d/luci-app-apmond.json:43
+#: htdocs/luci-static/resources/view/apmond/status.js:47
+msgid "Last report HTTP status"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:141
+msgid "Last report: %s. Reports: %s, lost: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:302
+#: htdocs/luci-static/resources/view/apmond/clients.js:90
+#: htdocs/luci-static/resources/view/apmond/clients.js:119
+msgid "Last seen"
+msgstr ""
+
+#: root/usr/share/luci/menu.d/luci-app-apmond.json:35
 msgid "Log"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:43
-msgid "Log file"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:115
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:41
+#: htdocs/luci-static/resources/view/apmond/settings.js:168
 msgid "Log mountpoint"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:44
-msgid "Logging"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:279
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:373
 msgid "MAC address"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:105
+#: htdocs/luci-static/resources/view/apmond/settings.js:165
 msgid "Maximum claim delay"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:124
+#: htdocs/luci-static/resources/view/apmond/settings.js:153
+msgid "Maximum clock difference"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:174
 msgid "Maximum log entries"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:138
-msgid "Maximum report age"
+#: htdocs/luci-static/resources/view/apmond/settings.js:156
+msgid "Maximum message size"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:143
-msgid "Maximum report size"
+#: htdocs/luci-static/resources/view/apmond/common.js:200
+#: htdocs/luci-static/resources/view/apmond/common.js:210
+msgid "Mbit/s"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:120
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:134
+#: htdocs/luci-static/resources/view/apmond/settings.js:67
 msgid "Must be an absolute path"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:358
-msgid "No access point data. Is apmond installed and running?"
+#: htdocs/luci-static/resources/view/apmond/settings.js:135
+msgid "Network device"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:276
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:290
+#: htdocs/luci-static/resources/view/apmond/clients.js:78
 msgid "No clients"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:28
+#: htdocs/luci-static/resources/view/apmond/clients.js:89
+#: htdocs/luci-static/resources/view/apmond/clients.js:112
+msgid "Node"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:34
+msgid "Node ID"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/clients.js:89
+#: htdocs/luci-static/resources/view/apmond/clients.js:113
+msgid "Node MAC"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:35
 msgid "Node address"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:66
+#: htdocs/luci-static/resources/view/apmond/status.js:51
+msgid "Nodes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:338
+msgid "Not a collector."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:345
+msgid "Open it on the collector"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:193
+msgid "Other"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:136
+msgid ""
+"Overrides Interface: the network device to use directly. Normally empty."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:22
+msgid "Package version"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:98
 msgid "Passphrase"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:19
+#: htdocs/luci-static/resources/view/apmond/settings.js:122
+#: htdocs/luci-static/resources/view/apmond/status.js:39
+msgid "Port"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:147
+msgid "Previous key epoch grace"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:25
 msgid "Protocol"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:40
-msgid "Protocol mismatch nodes"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:280
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:302
 msgid "RX bitrate"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:280
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:302
 msgid "RX bytes"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:106
+#: htdocs/luci-static/resources/view/apmond/settings.js:166
 msgid ""
 "Random delay of 0 to this many seconds before the collector address is first "
 "claimed. Default 10."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/log.js:46
+#: htdocs/luci-static/resources/view/apmond/log.js:82
 msgid "Refresh"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:387
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:454
 msgid "Refreshed every 30 seconds."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:374
 msgid "Release"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:71
+#: htdocs/luci-static/resources/view/apmond/clients.js:26
+msgid ""
+"Remove it from the collector now. A client that is still connected comes "
+"back."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:83
+msgid "Remove it from the collector now. A node that still reports comes back."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:103
 msgid "Report interval"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:36
-msgid "Report interval (s)"
+#: htdocs/luci-static/resources/view/apmond/status.js:43
+msgid "Reports"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:139
-msgid ""
-"Reports older or newer than this many seconds are rejected. Default 120."
+#: htdocs/luci-static/resources/view/apmond/status.js:46
+msgid "Reports failed"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:23
+#: htdocs/luci-static/resources/view/apmond/status.js:45
+msgid "Reports sent"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:28
+msgid "Restart needed"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:106
+#: htdocs/luci-static/resources/view/apmond/status.js:32
 msgid "Role"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:24
+#: htdocs/luci-static/resources/view/apmond/status.js:31
+msgid "Role and addresses"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:33
 msgid "Role reason"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:93
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:25
-msgid "Router detection"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:100
+#: htdocs/luci-static/resources/view/apmond/settings.js:162
 msgid "Router takeover misses"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:63
+#: htdocs/luci-static/resources/view/apmond/settings.js:94
 msgid "Run the ApmonD daemon on this node."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:47
-msgid "Running checksum"
+#: htdocs/luci-static/resources/view/apmond/status.js:26
+msgid "Running binary sha256"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:46
-msgid "Runtime directory"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:279
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:301
+#: htdocs/luci-static/resources/view/apmond/clients.js:89
+#: htdocs/luci-static/resources/view/apmond/clients.js:114
 msgid "SSID@interface or port@bridge"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:111
-msgid "Seconds before the first report. Default 60."
+#: htdocs/luci-static/resources/view/apmond/settings.js:160
+msgid "Seconds before the first report. Default 10."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:149
+#: htdocs/luci-static/resources/view/apmond/settings.js:104
+msgid "Seconds between reports, 10 to 3600. Default 30."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:126
 msgid ""
-"Seconds between log warnings while the built-in default passphrase is in "
-"use. Default 21600 (6 hours)."
+"Senders only: the collector address to report to. Empty uses the collector "
+"ULA, ending ::1, found automatically."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:72
-msgid "Seconds between reports, minimum 10. Default 30."
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:53
-#: applications/luci-app-apmond/root/usr/share/luci/menu.d/luci-app-apmond.json:16
+#: htdocs/luci-static/resources/view/apmond/settings.js:84
+#: root/usr/share/luci/menu.d/luci-app-apmond.json:3
 msgid "Settings"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:311
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:313
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:340
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:343
 msgid "Show clients"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:215
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:279
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:301
+#: htdocs/luci-static/resources/view/apmond/clients.js:103
+#: htdocs/luci-static/resources/view/apmond/clients.js:115
+#: htdocs/luci-static/resources/view/apmond/common.js:289
 msgid "Signal"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:110
+#: htdocs/luci-static/resources/view/apmond/settings.js:150
+msgid "Stale client timeout"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:159
 msgid "Startup delay"
 msgstr ""
 
-#: applications/luci-app-apmond/root/usr/share/luci/menu.d/luci-app-apmond.json:25
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:373
+msgid "State"
+msgstr ""
+
+#: root/usr/share/luci/menu.d/luci-app-apmond.json:11
 msgid "Status"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:280
+#: htdocs/luci-static/resources/view/apmond/log.js:61
+msgid "Stop following"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:123
+msgid "TCP port of the collector; the same on every node. Default 2468."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/clients.js:90
+#: htdocs/luci-static/resources/view/apmond/clients.js:118
+msgid "TX / RX bitrate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:302
 msgid "TX bitrate"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:280
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:302
 msgid "TX bytes"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:93
+#: htdocs/luci-static/resources/view/apmond/status.js:84
+msgid ""
+"The apmond binary has been replaced since the daemon started. Restart apmond "
+"to run the installed version."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:178
+msgid "The apmond binary was replaced; restart apmond on this node."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:72
 msgid ""
 "The built-in default passphrase is in use. Make ApmonD more secure by adding "
 "your own passphrase in Settings, the same on every node."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:44
+#: htdocs/luci-static/resources/view/apmond/settings.js:72
 msgid ""
 "The built-in default passphrase is in use. Make ApmonD more secure by adding "
 "your own passphrase, the same on every node."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:77
+#: htdocs/luci-static/resources/view/apmond/status.js:88
 msgid ""
-"The device that carries the ULA addresses; its MAC address identifies this "
-"node. On a VLAN filtering bridge the lan VLAN device is used automatically. "
-"Default br-lan."
+"The clock is not synced with the collector yet, so reports cannot be sent."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:125
-msgid "The log file is truncated to the last this many lines. Default 500."
+#: htdocs/luci-static/resources/view/apmond/settings.js:107
+msgid ""
+"The collector, the node with an upstream wan gateway, receives the reports "
+"of every node."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/log.js:21
+#: htdocs/luci-static/resources/view/apmond/status.js:92
+msgid ""
+"The last report was not accepted by the collector (HTTP status %s). Check "
+"that every node has the same passphrase, port and key epoch."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:175
+msgid "The log file is trimmed to the last this many lines. Default 500."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/log.js:27
 msgid "The log is empty, or no log file has been written yet."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/log.js:36
+#: htdocs/luci-static/resources/view/apmond/settings.js:131
 msgid ""
-"The output of \"apmond read_log\". Logging uses the debug level set in "
-"Settings."
+"The network interface whose device carries the ULA addresses and the "
+"collector listener, for example lan (br-lan.10 with VLANs). Default lan."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:225
-msgid "The output of \"apmond status\", refreshed every 10 seconds."
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:94
+#: htdocs/luci-static/resources/view/apmond/log.js:73
 msgid ""
-"The router, the node with an upstream wan gateway, is the collector that "
-"every node reports to."
+"The output of \"apmond read_log\". What is logged depends on the debug level "
+"set in Settings."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:111
+#: htdocs/luci-static/resources/view/apmond/status.js:264
+msgid "The status of apmond on this node, refreshed every 10 seconds."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:419
 msgid ""
-"These nodes report a different apmond protocol, upgrade apmond on them: %s"
+"These nodes use the built-in default passphrase: %s. Set your own passphrase "
+"in Settings, the same on every node."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:363
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:412
+msgid "This node is the collector. No reports have been received yet."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:340
 msgid ""
-"This node is not the collector, or the collector has not received any "
-"reports yet, so only this node is shown. The full list of access points is "
-"on the collector (the router)."
+"This node reports to the collector, which has the data of every access point."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:31
-msgid "ULA addresses"
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:373
+msgid "ULA"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:29
-msgid "ULA prefix"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:30
-msgid "ULA subnet"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:329
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:374
 msgid "Uptime"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:279
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:225
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:301
+#: htdocs/luci-static/resources/view/apmond/clients.js:90
+#: htdocs/luci-static/resources/view/apmond/clients.js:116
 msgid "VLAN"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:153
-msgid "Verbose debug"
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:301
+#: htdocs/luci-static/resources/view/apmond/clients.js:90
+#: htdocs/luci-static/resources/view/apmond/clients.js:117
+msgid "VXLAN"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:18
+#: htdocs/luci-static/resources/view/apmond/status.js:23
 msgid "Version"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:130
+#: htdocs/luci-static/resources/view/apmond/settings.js:169
 msgid ""
-"Where the daemon writes the receiver apmon.cgi at startup. Change it only if "
-"a web server other than uhttpd serves /cgi-bin/ from another directory. "
-"Default /www/cgi-bin."
+"Where the log is kept, in the apmond directory of this mountpoint, for "
+"example /mnt/usb. Default /tmp."
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:116
-msgid ""
-"Where the log and the access point data are kept, for example /mnt/usb. It "
-"must be an exact mountpoint and writable, otherwise /tmp is used. Default /"
-"tmp."
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:158
+#: htdocs/luci-static/resources/view/apmond/clients.js:56
+msgid "active"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/settings.js:80
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:34
-msgid "Wired client bridges"
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:373
+msgid "apmond"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:218
-msgid "antennas"
+#: htdocs/luci-static/resources/view/apmond/common.js:374
+msgid "apmond %s"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:57
-msgid "auto detect"
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:207
+msgid "channel %s"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:215
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:218
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/accesspoints.js:240
+#: htdocs/luci-static/resources/view/apmond/common.js:289
+#: htdocs/luci-static/resources/view/apmond/common.js:291
+#: htdocs/luci-static/resources/view/apmond/common.js:300
 msgid "dBm"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:58
+#: htdocs/luci-static/resources/view/apmond/status.js:17
 msgid "debug"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:58
+#: htdocs/luci-static/resources/view/apmond/status.js:14
 msgid "errors"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:57
-msgid "force peer"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:57
-msgid "force router/collector"
-msgstr ""
-
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:58
+#: htdocs/luci-static/resources/view/apmond/status.js:16
 msgid "info"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:153
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:157
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:152
+msgid "late"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:155
+msgid "lost"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:356
+msgid "luci-app-apmond %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:144
+msgid "no"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:129
+#: htdocs/luci-static/resources/view/apmond/status.js:149
 msgid "none"
 msgstr ""
 
-#: applications/luci-app-apmond/htdocs/luci-static/resources/view/apmond/status.js:58
+#: htdocs/luci-static/resources/view/apmond/status.js:15
 msgid "notices"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:149
+msgid "ok"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:161
+#: htdocs/luci-static/resources/view/apmond/clients.js:56
+msgid "stale"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:363
+msgid "unknown"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:221
+msgid "vni %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:219
+msgid "vni %s (%s)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:141
+msgid "yes"
 msgstr ""

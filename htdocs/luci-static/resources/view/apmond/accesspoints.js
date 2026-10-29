@@ -1,565 +1,439 @@
 'use strict';
 'require view';
-'require fs';
 'require ui';
 'require poll';
 'require dom';
-'require view.apmond.version as apmondver';
+'require view.apmond.common as common';
 
 /*
- * ApmonD access points.
+ * ApmonD access points: "ubus call apmond nodes" on the collector, every node that has
+ * reported with its radios and clients, the collector first. A sender has no node list; it
+ * shows its own status line and a link to this page on the collector.
  *
- * On the collector "apmond show_ap_data all" prints every stored report merged into one
- * JSON object; on any node "apmond get_ap_data" prints this node's own report:
- *
- *   "System@<mac>": {
- *     "Device": ..., "Description": ..., "Release": ..., "phy": { ... },
- *     "node_status": { "device_mac", "node_ula", "ipv4_addresses", "uptime_seconds", "load_average_1min",
- *                      "free_ram_kb", ... },
- *     "clients@<mac>": {
- *       "<SSID>@<iface>" or "<port>@<bridge>": {
- *         "<client mac>": { "rx_bytes", "tx_bytes", "signal_avg", "tx_bitrate", "rx_bitrate",
- *                           "connected_time", "vlan", "stats_scope", ... }
- *       }
- *     }
- *   }
- *
- * Text values come from mesh11sd style output, with underscores for spaces ("72.2_MBit/s").
- *
- * node_ula (this AP's apmond ULA) and ipv4_addresses ([ "192.168.1.2/24", ... ]) are sent from apmond 1.0.1.
- * Older apmond and mesh11sd APs do not send them: their Address cells show "-" and have no link.
+ * Node rows: state ok / late / lost from the collector; late and lost rows are greyed and a
+ * lost node can be forgotten. Client rows: state active / stale; stale clients (gone from their
+ * node's report, kept for client_stale_timeout) are greyed and can be forgotten.
  */
-
-var APMOND = '/usr/sbin/apmond';
 
 /* node macs whose client table is open, kept across refreshes */
 var expanded = {};
 
+var GREY = 'opacity:0.5';
+
 /*
  * Fixed column widths (percent, each set sums to 100) with table-layout: fixed, so every node's
- * client table lines up with the others. Long values wrap inside their cell. In the narrow
- * (mobile) theme layout the rows are flex boxes, the widths do not apply and the data-title
- * labels are shown instead of the hidden title row.
- *
- * Header cells only wrap between words, so a title is never split inside a word ("Client s").
+ * client table lines up with the others. In the narrow (mobile) theme layout the data-title
+ * labels are shown instead.
  */
-var CLIENT_COLS = [ 13, 15, 5, 13, 13, 13, 9, 9, 10 ];
-var NODE_COLS = [ 10, 11, 15, 10, 12, 9, 9, 7, 7, 10 ];
+var NODE_COLS = [ 10, 11, 14, 10, 11, 9, 9, 8, 7, 5, 6 ];
+var CLIENT_COLS = [ 12, 13, 5, 8, 11, 10, 10, 9, 9, 8, 5 ];
 var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
 var HEAD_STYLE = 'overflow-wrap:normal;word-break:normal';
 
 return view.extend({
-	/* "72.2_MBit/s_MCS_7" -> "72.2 MBit/s MCS 7" */
-	text: function(v) {
-		return (v == null || v === '') ? '-' : String(v).replace(/_/g, ' ');
-	},
-
-	/* a JSON object from apmond output, or null when it is empty or not JSON */
-	parseJSON: function(text) {
-		var obj;
-
-		if (text == null || String(text).trim() === '')
-			return null;
-
-		try {
-			obj = JSON.parse(text);
-		}
-		catch (e) {
-			return null;
-		}
-
-		return (obj && typeof(obj) == 'object' && !Array.isArray(obj)) ? obj : null;
-	},
-
-	formatBytes: function(v) {
-		var n = parseInt(v, 10), units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB' ], i = 0;
-
-		if (isNaN(n))
-			return this.text(v);
-
-		while (n >= 1024 && i < units.length - 1) {
-			n /= 1024;
-			i++;
-		}
-
-		return (i ? n.toFixed(2) : String(n)) + ' ' + units[i];
-	},
-
-	/* free_ram_kb and similar: a KiB count, or text such as "unknown" */
-	formatKiB: function(v) {
-		var n = parseInt(v, 10);
-		return isNaN(n) ? this.text(v) : this.formatBytes(n * 1024);
-	},
-
-	/* seconds (number, or text such as "4100_seconds") -> "1d 2h 3m 4s" */
-	formatDuration: function(v) {
-		var s = parseInt(v, 10), out = [];
-
-		if (isNaN(s))
-			return this.text(v);
-
-		var d = Math.floor(s / 86400), h = Math.floor(s / 3600) % 24, m = Math.floor(s / 60) % 60;
-
-		if (d) out.push(d + 'd');
-		if (d || h) out.push(h + 'h');
-		if (d || h || m) out.push(m + 'm');
-		out.push((s % 60) + 's');
-
-		return out.join(' ');
-	},
-
-	/* wired client speeds are plain Mbit/s numbers ("1000", "1000/100"), or "down" / "unknown" */
-	formatBitrate: function(v) {
-		if (v != null && /^[0-9]+(\/[0-9]+)*$/.test(String(v)))
-			return String(v) + ' Mbit/s';
-		return this.text(v);
-	},
-
-	/* a ULA (fc00::/7) as apmond prints it, e.g. "fd18:cef4:6dbd:baa0:0:ff:fe0a:0", or null: only such a value is made a link */
-	parseULA: function(v) {
-		var s = (typeof(v) == 'string') ? v.toLowerCase() : '';
-
-		if (!/^f[cd][0-9a-f]{2}:[0-9a-f:]+$/.test(s) || s.length > 39)
-			return null;
-
-		return s;
-	},
-
-	/* ipv4_addresses: the a.b.c.d or a.b.c.d/len strings of the array, [] if missing or not an array */
-	parseIPv4: function(v) {
-		if (!Array.isArray(v))
-			return [];
-
-		return v.map(function(a) {
-			return String(a);
-		}).filter(function(a) {
-			return /^[0-9]{1,3}(\.[0-9]{1,3}){3}(\/[0-9]{1,2})?$/.test(a);
-		});
-	},
-
-	/*
-	 * Turn the apmond JSON into a list of nodes:
-	 * [ { mac, device, release, uptime, load, free_ram_kb, version, ula, ipv4, clients: [ ... ] }, ... ]
-	 */
-	parseNodes: function(obj) {
-		var self = this, nodes = [];
-
-		if (obj == null)
-			return nodes;
-
-		Object.keys(obj).forEach(function(key) {
-			if (key.indexOf('System@') != 0 || obj[key] == null || typeof(obj[key]) != 'object')
-				return;
-
-			var sys = obj[key],
-			    mac = key.substr(7),
-			    ns = sys.node_status || {},
-			    groups = sys['clients@' + mac] || {},
-			    clients = [];
-
-			Object.keys(groups).forEach(function(where) {
-				var group = groups[where];
-
-				if (group == null || typeof(group) != 'object')
-					return;
-
-				Object.keys(group).forEach(function(cmac) {
-					var c = group[cmac] || {};
-
-					clients.push({
-						mac: cmac,
-						where: where,
-						wired: (c.stats_scope != null || c.signal_avg == null),
-						vlan: c.vlan,
-						signal: c.signal_avg,
-						tx_bitrate: c.tx_bitrate,
-						rx_bitrate: c.rx_bitrate,
-						rx_bytes: c.rx_bytes,
-						tx_bytes: c.tx_bytes,
-						per_port: (c.stats_scope == 'port'),
-						connected_time: c.connected_time
-					});
-				});
-			});
-
-			nodes.push({
-				mac: ns.device_mac || mac,
-				device: sys.Device,
-				release: sys.Description || sys.Release,
-				uptime: ns.uptime_seconds,
-				load: [ ns.load_average_1min, ns.load_average_5min, ns.load_average_15min ],
-				free_ram_kb: ns.free_ram_kb,
-				version: ns.apmond_version,
-				ula: self.parseULA(ns.node_ula),
-				ipv4: self.parseIPv4(ns.ipv4_addresses),
-				clients: clients
-			});
-		});
-
-		return nodes;
-	},
-
-	/* the leading dBm of "-29_[-35,_-31]_dBm" or "-29 [-34, -31] dBm", or null */
-	parseSignal: function(v) {
-		var m = (v == null) ? null : String(v).match(/^\s*(-?[0-9]+)(?![0-9.])/);
-		return m ? parseInt(m[1], 10) : null;
-	},
-
-	/*
-	 * LuCI signal icon for a dBm value, with the quality mapping and thresholds of the
-	 * associated stations table in luci-mod-status (view/status/include/60_wifi.js):
-	 * q = min((dBm + 110) / 70 * 100, 100)
-	 */
-	signalIcon: function(dbm) {
-		var q = Math.min((dbm + 110) / 70 * 100, 100);
-
-		if (q <= 0)
-			return 'icons/signal-000-000.svg';
-		else if (q < 25)
-			return 'icons/signal-000-025.svg';
-		else if (q < 50)
-			return 'icons/signal-025-050.svg';
-		else if (q < 75)
-			return 'icons/signal-050-075.svg';
-		else
-			return 'icons/signal-075-100.svg';
-	},
-
-	/* per antenna values of "-38_[-44,_-39]_dBm" -> [ -44, -39 ], or [] */
-	parseAntennas: function(v) {
-		var m = (v == null) ? null : String(v).match(/\[([^\]]*)\]/);
-
-		if (!m)
-			return [];
-
-		return m[1].replace(/_/g, ' ').split(',').map(function(x) {
-			return x.trim();
-		}).filter(function(x) {
-			return /^-?[0-9]+$/.test(x);
-		}).map(function(x) {
-			return parseInt(x, 10);
-		});
-	},
-
-	/* "Signal: -38 dBm (antennas: -44, -39 dBm)", or "Signal: -38 dBm" */
-	signalTitle: function(v, dbm) {
-		var ant = this.parseAntennas(v),
-		    t = _('Signal') + ': ' + dbm + ' ' + _('dBm');
-
-		if (ant.length)
-			t += ' (' + _('antennas') + ': ' + ant.join(', ') + ' ' + _('dBm') + ')';
-
-		return t;
-	},
-
-	/*
-	 * signal cell content: '-' for wired; for wireless the LuCI signal icon and the leading
-	 * value ("-38 dBm") on one line, details in the tooltip; the text as is if unparseable
-	 */
-	renderSignal: function(c) {
-		var dbm;
-
-		if (c.wired)
-			return '-';
-
-		dbm = this.parseSignal(c.signal);
-
-		if (dbm == null)
-			return this.text(c.signal);
-
-		return E('span', { 'style': 'white-space:nowrap', 'title': this.signalTitle(c.signal, dbm) }, [
-			E('img', { 'src': L.resource(this.signalIcon(dbm)), 'alt': '', 'style': 'width:20px;height:20px;vertical-align:middle' }),
-			' ' + dbm + ' ' + _('dBm')
-		]);
-	},
-
-	/* a th or td with a fixed width, wrapping long values, labelled for the mobile layout */
+	/* a th or td with a fixed width, labelled for the mobile layout */
 	cell: function(tag, width, title, content) {
-		var style = (tag == 'th') ? HEAD_STYLE : CELL_STYLE;
-		var attrs = { 'class': tag, 'style': 'width:' + width + '%;' + style };
+		var style = CELL_STYLE;
+		var attrs;
 
-		if (title != null)
+		if (tag == 'th') {
+			style = HEAD_STYLE;
+		}
+
+		attrs = { 'class': tag, 'style': 'width:' + width + '%;' + style };
+		if (title != null) {
 			attrs['data-title'] = title;
+		}
 
 		return E(tag, attrs, [ content ]);
 	},
 
-	/* a table with fixed column widths: titles and rows of cell contents */
+	/*
+	 * A table with fixed column widths. rows: { cells: [ ... ], grey: bool }, or
+	 * { detail: <tr> } for a full width row.
+	 */
 	fixedTable: function(widths, titles, rows) {
 		var self = this;
+		var head = E('tr', { 'class': 'tr table-titles' }, titles.map(function(t, i) {
+			return self.cell('th', widths[i], null, t);
+		}));
 
-		return E('table', { 'class': 'table', 'style': 'table-layout:fixed;width:100%' }, [
-			E('tr', { 'class': 'tr table-titles' }, titles.map(function(t, i) {
-				return self.cell('th', widths[i], null, t);
-			}))
-		].concat(rows.map(function(r) {
-			if (r.detail)
+		return E('table', { 'class': 'table', 'style': 'table-layout:fixed;width:100%' }, [ head ].concat(rows.map(function(r) {
+			var attrs = { 'class': 'tr' };
+
+			if (r.detail) {
 				return r.detail;
+			}
+			if (r.grey) {
+				attrs.style = GREY;
+			}
 
-			return E('tr', { 'class': 'tr' }, r.map(function(v, i) {
+			return E('tr', attrs, r.cells.map(function(v, i) {
 				return self.cell('td', widths[i], titles[i], v);
 			}));
 		})));
 	},
 
-	renderClients: function(node) {
+	/* a Forget button; after forgetting, the page data is fetched again */
+	forgetButton: function(what, mac) {
 		var self = this;
 
-		if (!node.clients.length)
-			return E('em', {}, [ _('No clients') ]);
+		return E('button', {
+			'class': 'btn cbi-button cbi-button-remove',
+			'title': _('Remove it from the collector now. A node that still reports comes back.'),
+			'click': ui.createHandlerFn(this, function() {
+				var call;
 
-		return this.fixedTable(CLIENT_COLS, [
-			_('MAC address'), _('SSID@interface or port@bridge'), _('VLAN'), _('Signal'),
-			_('TX bitrate'), _('RX bitrate'), _('RX bytes'), _('TX bytes'), _('Connected')
-		], node.clients.map(function(c) {
-			var port = c.per_port ? ' ' + _('(per port)') : '';
+				if (what == 'node') {
+					call = common.forgetNode(mac);
+				}
+				else {
+					call = common.forgetClient(mac);
+				}
 
-			return [
-				c.mac,
-				self.text(c.where),
-				self.text(c.vlan),
-				self.renderSignal(c),
-				c.wired ? self.formatBitrate(c.tx_bitrate) : self.text(c.tx_bitrate),
-				c.wired ? self.formatBitrate(c.rx_bitrate) : self.text(c.rx_bitrate),
-				self.formatBytes(c.rx_bytes) + port,
-				self.formatBytes(c.tx_bytes) + port,
-				c.connected_time != null ? self.formatDuration(c.connected_time) : '-'
-			];
-		}));
+				return call.then(function() {
+					return self.refresh();
+				}).catch(function(e) {
+					ui.addNotification(null, E('p', {}, [ _('Could not forget %s: %s').format(mac, e.message || e) ]), 'error');
+				});
+			})
+		}, [ _('Forget') ]);
 	},
 
-	/*
-	 * ULA cell: the AP's ULA as a link to its Access points page, opened in a new window, as the
-	 * peer note links to the collector; "-" for an AP that does not send node_ula (older apmond, mesh11sd).
-	 * This node's own ULA is plain text: a link would only open this page again.
-	 */
-	renderULA: function(ula, own) {
-		var url;
-
-		if (!ula)
-			return '-';
-
-		if (own)
-			return ula;
-
-		url = this.nodeURL(ula);
-
-		return E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ ula ]);
-	},
-
-	/* IPv4 cell: one address per line, "-" when there are none or the AP does not send them */
-	renderIPv4: function(addrs) {
+	/* "1.2.3.4/24" lines, or "-" */
+	renderIPv4: function(v) {
+		var addrs = common.parseIPv4(v);
 		var out = [];
 
-		if (!addrs || !addrs.length)
+		if (!addrs.length) {
 			return '-';
+		}
 
 		addrs.forEach(function(a, i) {
-			if (i)
+			if (i) {
 				out.push(E('br'));
+			}
 			out.push(a);
 		});
 
 		return E('span', {}, out);
 	},
 
-	renderNodes: function(nodes) {
-		var self = this, rows = [];
+	/*
+	 * ULA cell: a link to that node's Access points page, in a new window; "-" when it has
+	 * none. This node's own ULA is plain text: a link would only open this page again.
+	 */
+	renderULA: function(v, own) {
+		var ula = common.parseULA(v);
+
+		if (!ula) {
+			return '-';
+		}
+		if (own) {
+			return ula;
+		}
+		return common.link(common.nodeURL(ula, 'accesspoints'), ula);
+	},
+
+	/* "ok, 12s ago" with the report date as tooltip; restart_needed and default passphrase marked */
+	renderState: function(n) {
+		var label = '%s, %s'.format(this.stateLabel(n.state), common.formatAge(n.age_s));
+		var title = _('Last report: %s. Reports: %s, lost: %s').format(
+			common.formatDate(n.last_report_date), common.text(n.reports), common.text(n.lost_reports));
+
+		return E('span', { 'title': title }, [ label ]);
+	},
+
+	stateLabel: function(s) {
+		if (s == 'ok') {
+			return _('ok');
+		}
+		if (s == 'late') {
+			return _('late');
+		}
+		if (s == 'lost') {
+			return _('lost');
+		}
+		if (s == 'active') {
+			return _('active');
+		}
+		if (s == 'stale') {
+			return _('stale');
+		}
+		return common.text(s);
+	},
+
+	/* package version (build commit), in red with a note when the node needs a restart */
+	renderVersion: function(n) {
+		var v = n.package_version || n.apmond_version;
+		var title = '';
+
+		if (n.build_commit) {
+			title = _('Build commit %s').format(n.build_commit);
+		}
+
+		if (n.restart_needed === true) {
+			return E('span', {
+				'style': 'color:#c00;font-weight:bold',
+				'title': _('The apmond binary was replaced; restart apmond on this node.')
+			}, [ common.text(v) + ' ' + _('(restart needed)') ]);
+		}
+
+		return E('span', { 'title': title }, [ common.text(v) ]);
+	},
+
+	renderLoad: function(v) {
+		if (!Array.isArray(v)) {
+			return '-';
+		}
+		return v.map(function(l) {
+			return common.text(l);
+		}).join(' / ');
+	},
+
+	/* one line per radio: "phy0: channel 1 (2412 MHz), HT20, 20 dBm: House-6873 (VLAN 10), guest-6873 (VLAN 20)" */
+	renderRadios: function(radios) {
+		var lines = [];
+
+		if (!Array.isArray(radios) || !radios.length) {
+			return '';
+		}
+
+		radios.forEach(function(r) {
+			var aps = [];
+			var parts = [];
+
+			if (r.channel != null) {
+				parts.push(_('channel %s').format(r.channel));
+			}
+			if (r.frequency_mhz != null) {
+				parts.push('%s MHz'.format(r.frequency_mhz));
+			}
+			if (r.htmode) {
+				parts.push(r.htmode);
+			}
+			else if (r.width_mhz != null) {
+				parts.push('%s MHz'.format(r.width_mhz));
+			}
+			if (r.txpower_dbm != null) {
+				parts.push('%s dBm'.format(r.txpower_dbm));
+			}
+
+			(r.aps || []).forEach(function(ap) {
+				var t = '%s@%s'.format(common.text(ap.ssid), common.text(ap.ifname));
+
+				t = t + ' (' + _('VLAN') + ' ' + common.text(ap.vlan);
+				if (ap.vxlan != null) {
+					t = t + ', ' + common.formatVxlan(ap.vxlan);
+				}
+				t = t + ')';
+				aps.push(t);
+			});
+
+			if (lines.length) {
+				lines.push(E('br'));
+			}
+			lines.push(E('strong', {}, [ common.text(r.phy) + ': ' ]));
+			lines.push(parts.join(', '));
+			if (aps.length) {
+				lines.push(' \u2014 ' + aps.join(', '));
+			}
+		});
+
+		return E('p', { 'style': 'margin:0.5em 0' }, lines);
+	},
+
+	/* the cells of one client row; nested under a node, so without the node column */
+	clientCells: function(c) {
+		var rx = '-';
+		var tx = '-';
+		var connected = '-';
+		var forget = '';
+
+		if (c.kind == 'wifi') {
+			tx = common.formatKbps(c.tx_bitrate_kbps);
+			rx = common.formatKbps(c.rx_bitrate_kbps);
+			connected = common.formatDuration(c.connected_s);
+		}
+		else {
+			tx = common.formatMbps(c.speed_mbps);
+			rx = tx;
+		}
+
+		if (c.state == 'stale') {
+			forget = this.forgetButton('client', c.client_mac);
+		}
+
+		return [
+			c.client_mac,
+			common.formatWhere(c),
+			common.text(c.vlan),
+			common.formatVxlan(c.vxlan),
+			common.renderSignal(c),
+			tx,
+			rx,
+			common.formatBytes(c.rx_bytes),
+			common.formatBytes(c.tx_bytes),
+			E('span', { 'title': common.formatDate(c.last_seen_date) }, [
+				'%s, %s'.format(this.stateLabel(c.state), common.formatAge(c.last_seen_age_s))
+			]),
+			forget
+		];
+	},
+
+	renderClients: function(node) {
+		var self = this;
+		var clients = node.clients || [];
+		var rows;
+
+		if (!clients.length) {
+			return E('em', {}, [ _('No clients') ]);
+		}
+
+		rows = clients.map(function(c) {
+			return {
+				cells: self.clientCells(c),
+				grey: (c.state == 'stale')
+			};
+		});
+
+		return this.fixedTable(CLIENT_COLS, [
+			_('Client MAC'), _('SSID@interface or port@bridge'), _('VLAN'), _('VXLAN'), _('Signal'),
+			_('TX bitrate'), _('RX bitrate'), _('RX bytes'), _('TX bytes'), _('Last seen'), ' '
+		], rows);
+	},
+
+	renderNodes: function(nodes, ownId) {
+		var self = this;
+		var rows = [];
 
 		nodes.forEach(function(n) {
-			var open = !!expanded[n.mac],
-			    detail = E('tr', { 'class': 'tr', 'style': open ? null : 'display:none' }, [
-				E('td', { 'class': 'td', 'colspan': String(NODE_COLS.length), 'style': 'flex:1 1 100%' }, [ self.renderClients(n) ])
-			    ]),
-			    btn = E('button', {
+			var own = (n.node_mac == ownId);
+			var open = !!expanded[n.node_mac];
+			var detailStyle = null;
+			var detail;
+			var btn;
+			var forget = '';
+			var clientCount = n.client_count;
+
+			if (!open) {
+				detailStyle = 'display:none';
+			}
+
+			detail = E('tr', { 'class': 'tr', 'style': detailStyle }, [
+				E('td', { 'class': 'td', 'colspan': String(NODE_COLS.length), 'style': 'flex:1 1 100%' }, [
+					self.renderRadios(n.radios),
+					self.renderClients(n)
+				])
+			]);
+
+			btn = E('button', {
 				'class': 'btn cbi-button',
 				'click': function(ev) {
-					expanded[n.mac] = !expanded[n.mac];
-					detail.style.display = expanded[n.mac] ? '' : 'none';
-					ev.target.firstChild.data = expanded[n.mac] ? _('Hide clients') : _('Show clients');
+					expanded[n.node_mac] = !expanded[n.node_mac];
+					if (expanded[n.node_mac]) {
+						detail.style.display = '';
+						ev.target.firstChild.data = _('Hide clients');
+					}
+					else {
+						detail.style.display = 'none';
+						ev.target.firstChild.data = _('Show clients');
+					}
 				}
-			    }, [ open ? _('Hide clients') : _('Show clients') ]);
+			}, [ open ? _('Hide clients') : _('Show clients') ]);
 
-			rows.push([
-				self.text(n.device),
-				n.mac,
-				self.renderULA(n.ula, n.own),
-				self.renderIPv4(n.ipv4),
-				self.text(n.release),
-				self.formatDuration(n.uptime),
-				n.load.map(function(l) { return self.text(l); }).join(' / '),
-				self.formatKiB(n.free_ram_kb),
-				String(n.clients.length),
-				btn
-			]);
+			if (n.state == 'lost' && !own) {
+				forget = self.forgetButton('node', n.node_mac);
+			}
+
+			if (clientCount == null) {
+				clientCount = (n.clients || []).length;
+			}
+
+			rows.push({
+				cells: [
+					E('span', { 'title': common.text(n.model) }, [ common.text(n.hostname) ]),
+					n.node_mac,
+					self.renderULA(n.node_ula, own),
+					self.renderIPv4(n.ipv4_addresses),
+					self.renderState(n),
+					self.renderVersion(n),
+					common.text(n.openwrt_release),
+					common.formatDuration(n.uptime_s),
+					common.formatKiB(n.free_ram_kb),
+					String(clientCount),
+					E('span', {}, [ btn, ' ', forget ])
+				],
+				grey: (n.state != null && n.state != 'ok')
+			});
 			rows.push({ detail: detail });
 		});
 
 		return this.fixedTable(NODE_COLS, [
-			_('Device'), _('MAC address'), _('ULA'), _('IPv4 address'), _('Release'), _('Uptime'), _('Load'),
-			_('Free RAM'), _('Clients'), ' '
+			_('Device'), _('MAC address'), _('ULA'), _('IPv4 address'), _('State'), _('apmond'),
+			_('Release'), _('Uptime'), _('Free RAM'), _('Clients'), ' '
 		], rows);
 	},
 
-	/*
-	 * Is node n this node? True when its ULA or its MAC matches node_ula or ap_mac_id of
-	 * this node (id, from getOwnId). Does not use the page address: the page may be opened by IPv4.
-	 */
-	isOwnNode: function(n, id) {
-		var ownULA = this.parseULA(id.node_ula);
-		var ownMAC = String(id.ap_mac_id || '').toLowerCase();
-
-		if (ownULA && n.ula == ownULA)
-			return true;
-
-		if (ownMAC && String(n.mac || '').toLowerCase() == ownMAC)
-			return true;
-
-		return false;
-	},
-
-	/*
-	 * This node's identity, { node_ula, ap_mac_id } from apmond status, for isOwnNode().
-	 * Read once and kept: it does not change while the page is open. When status gives nothing
-	 * it is not kept, so the next refresh tries again, and meanwhile no row is marked as this node.
-	 */
-	getOwnId: function() {
-		var self = this;
-
-		if (this.ownId)
-			return Promise.resolve(this.ownId);
-
-		return L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null).then(function(out) {
-			var st = self.parseJSON(out);
-
-			st = (st && st.apmond_status) || {};
-
-			if (!st.node_ula && !st.ap_mac_id)
-				return {};
-
-			self.ownId = { node_ula: st.node_ula, ap_mac_id: st.ap_mac_id };
-
-			return self.ownId;
+	/* the nodes that use the built-in default passphrase, for a warning on the collector */
+	defaultPassphraseNodes: function(nodes) {
+		return nodes.filter(function(n) {
+			return n.default_passphrase === true;
+		}).map(function(n) {
+			return common.text(n.hostname);
 		});
 	},
 
-	/*
-	 * Fetch the data: show_ap_data all on the collector, with this node's own row marked from
-	 * getOwnId(). When that gives no access points (a peer, or nothing received yet) get_ap_data
-	 * for this node only, so its row is always this node, plus apmond status for this node's role
-	 * and the collector address.
-	 * Resolves to { collector: bool, nodes: [ ... ], role: string, collector_ula: string },
-	 * each node with own: true for this node's own row.
-	 */
+	/* resolves to { st, nodes } */
 	fetchData: function() {
-		var self = this;
-
-		return L.resolveDefault(fs.exec_direct(APMOND, [ 'show_ap_data', 'all' ]), null).then(function(all) {
-			var nodes = self.parseNodes(self.parseJSON(all));
-
-			if (nodes.length) {
-				return self.getOwnId().then(function(id) {
-					// collector: mark this node's own row
-					nodes.forEach(function(n) {
-						n.own = self.isOwnNode(n, id);
-					});
-
-					return { collector: true, nodes: nodes };
-				});
-			}
-
-			return Promise.all([
-				L.resolveDefault(fs.exec_direct(APMOND, [ 'get_ap_data' ]), null),
-				L.resolveDefault(fs.exec_direct(APMOND, [ 'status' ]), null)
-			]).then(function(res) {
-				var ownNodes = self.parseNodes(self.parseJSON(res[0]));
-				var st = self.parseJSON(res[1]);
-
-				st = (st && st.apmond_status) || {};
-
-				// get_ap_data is this node's own report
-				ownNodes.forEach(function(n) {
-					n.own = true;
-				});
-
-				return {
-					collector: false,
-					nodes: ownNodes,
-					role: st.role || '',
-					collector_ula: st.collector || ''
-				};
-			});
+		return Promise.all([ common.getStatus(), common.getNodes() ]).then(function(res) {
+			return { st: res[0], nodes: res[1] };
 		});
-	},
-
-	/* the Access points page on a node (the collector, or an AP), by its ULA, in the scheme this page was loaded with */
-	nodeURL: function(ula) {
-		var proto = (typeof window != 'undefined' && window.location && window.location.protocol) || 'https:',
-		    path = (L.url ? L.url('admin/services/apmond/accesspoints') : '/cgi-bin/luci/admin/services/apmond/accesspoints');
-
-		return proto + '//[' + ula + ']' + path;
-	},
-
-	/* the Access points page on the collector */
-	collectorURL: function(ula) {
-		return this.nodeURL(ula);
-	},
-
-	/* the note above the table on a node that holds no reports */
-	peerNote: function(data) {
-		var link = null, lead, rest;
-
-		if (data.collector_ula) {
-			var url = this.collectorURL(data.collector_ula);
-			link = E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ _('here') ]);
-		}
-
-		if (data.role == 'router') {
-			lead = _('This node is the collector.');
-			rest = _('No access point reports have been received yet, so only this node is shown.');
-			link = null;
-		}
-		else if (data.role == 'peer' || data.role == 'backed-off') {
-			lead = _('Not a collector.');
-			rest = data.collector_ula
-				? _('This node reports to the collector at %s, which has the full list of access points.').format(data.collector_ula)
-				: _('This node reports to the collector, which has the full list of access points.');
-			if (data.nodes && data.nodes.length)
-				rest += ' ' + _('Only this node is shown here.');
-		}
-		else {
-			lead = _('Not a collector, or the collector has not received any reports yet.');
-			rest = _('Only this node is shown. The full list of access points is on the collector (the router).');
-		}
-
-		return E('div', { 'class': 'alert-message notice' }, [
-			E('p', {}, [ E('strong', {}, [ lead ]), ' ', rest ]),
-			link ? E('p', {}, [ _('Click') + ' ', link, ' ' + _('to open the collector\'s Access points page in a new window.') ]) : ''
-		]);
 	},
 
 	renderData: function(data) {
-		if (!data.nodes.length && !data.collector && data.role)
-			return E('div', {}, [
-				this.peerNote(data),
-				E('div', { 'class': 'alert-message warning' },
-					_('This node has no clients connected at the moment, so it has no access point report to show.'))
-			]);
+		var st = data.st;
+		var nodes = data.nodes;
+		var out = [];
+		var dflt;
 
-		if (!data.nodes.length)
-			return E('div', { 'class': 'alert-message warning' },
-				_('No access point data. Is apmond installed and running?'));
+		if (st == null) {
+			return E('div', { 'class': 'alert-message error' },
+				_('Could not read the ApmonD status. Is apmond installed, enabled and running?'));
+		}
 
-		if (data.collector)
-			return E('div', {}, [
-				E('p', {}, [ _('Access points that have reported to this node, the collector. Click "Show clients" to see the clients of an access point.') ]),
-				this.renderNodes(data.nodes)
-			]);
+		if (st.role != 'collector') {
+			out.push(common.senderNote(st, 'accesspoints'));
+			return E('div', {}, out);
+		}
 
-		return E('div', {}, [
-			this.peerNote(data),
-			this.renderNodes(data.nodes)
-		]);
+		if (!nodes.length) {
+			out.push(E('div', { 'class': 'alert-message notice' },
+				_('This node is the collector. No reports have been received yet.')));
+			return E('div', {}, out);
+		}
+
+		dflt = this.defaultPassphraseNodes(nodes);
+		if (dflt.length) {
+			out.push(E('div', { 'class': 'alert-message notice' }, [
+				_('These nodes use the built-in default passphrase: %s. Set your own passphrase in Settings, the same on every node.').format(dflt.join(', '))
+			]));
+		}
+
+		out.push(E('p', {}, [
+			_('Access points that have reported to this node, the collector. Click "Show clients" for the radios and clients of an access point. Late and lost nodes and stale clients are greyed out.')
+		]));
+		out.push(this.renderNodes(nodes, st.id));
+
+		return E('div', {}, out);
+	},
+
+	refresh: function() {
+		var self = this;
+
+		return this.fetchData().then(function(d) {
+			dom.content(self.box, self.renderData(d));
+		});
 	},
 
 	load: function() {
@@ -567,20 +441,19 @@ return view.extend({
 	},
 
 	render: function(data) {
-		var self = this,
-		    box = E('div', {}, [ this.renderData(data) ]);
+		var self = this;
+
+		this.box = E('div', {}, [ this.renderData(data) ]);
 
 		poll.add(function() {
-			return self.fetchData().then(function(d) {
-				dom.content(box, self.renderData(d));
-			});
+			return self.refresh();
 		}, 30);
 
 		return E('div', { 'class': 'cbi-map' }, [
 			E('h2', {}, [ _('ApmonD Access Points') ]),
 			E('div', { 'class': 'cbi-map-descr' }, [ _('Refreshed every 30 seconds.') ]),
-			box,
-			apmondver.footer()
+			this.box,
+			common.footer()
 		]);
 	},
 
