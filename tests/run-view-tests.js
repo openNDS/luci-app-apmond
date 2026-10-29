@@ -175,10 +175,11 @@ function ok(msg) {
 	assert.strictEqual(common.formatAge(10000), '2h ago');
 	ok('common: ages as the apmond tables');
 	assert.strictEqual(common.formatKbps(72200), '72.2 Mbit/s');
-	assert.strictEqual(common.formatMbps(100), '100 Mbit/s');
+	assert.strictEqual(common.formatLink(100), 'Link 100 Mbit/s');
+	assert.strictEqual(common.formatLink(null), '-');
 	assert.strictEqual(common.formatVxlan({ vni: 42, device: 'vxlan42' }), 'vni 42 (vxlan42)');
 	assert.strictEqual(common.formatVxlan(null), '-');
-	ok('common: bitrates and vxlan');
+	ok('common: bitrates, wired link speed and vxlan');
 	assert.strictEqual(common.formatWhere(clients.clients[0]), 'eth0.1@br-lan');
 	assert.strictEqual(common.formatWhere(lost.nodes[1].clients[0]), 'House-f9d1@phy0-ap0');
 	ok('common: port@bridge for wired, SSID@interface for Wi-Fi');
@@ -203,7 +204,7 @@ function ok(msg) {
 	// Status
 	const st = loadView('status');
 	assert.deepStrictEqual(st.statusWarnings(statusC), []);
-	assert.strictEqual(st.statusNotes(statusC).length, 1);
+	assert.deepStrictEqual(st.statusNotes(statusC), [ 'The built-in default passphrase is in use. Set your own passphrase in Settings, the same on every node.' ]);
 	ok('status: collector sample has the default passphrase note and no warnings');
 	t = text(st.renderStatus(statusC));
 	assert.ok(t.includes('2.0.0_beta-r14'));
@@ -231,6 +232,11 @@ function ok(msg) {
 	assert.ok(v.includes('House-6873@phy0-ap0 (VLAN 10)'));
 	assert.ok(v.includes('These nodes use the built-in default passphrase: OpenWrt-6873, OpenWrt-f9d1'));
 	ok('access points: collector nodes, addresses, radios and clients');
+	v = find(t, (n) => n.tag === 'tr' && text(n).includes('1c:86:0b:36:3f:dd') && n.children.length > 3)[0];
+	v = v.children.map(text);
+	assert.strictEqual(v[5], 'Link 100 Mbit/s');
+	assert.strictEqual(v[6], '-');
+	ok('access points: wired client shows Link speed in TX bitrate, RX bitrate -');
 	v = find(t, (n) => n.tag === 'a').map((a) => a.attrs.href);
 	assert.deepStrictEqual(v, [ 'https://[fd46:cfe5:34c5:6ddd:9683:c4ff:fe2e:f9d1]/cgi-bin/luci/admin/services/apmond/accesspoints' ]);
 	ok('access points: only the other node\'s ULA is a link');
@@ -268,8 +274,8 @@ function ok(msg) {
 	v = text(t);
 	assert.ok(v.includes('1c:86:0b:36:3f:dd'));
 	assert.ok(v.includes('OpenWrt-6873'));
-	assert.ok(v.includes('100 Mbit/s'));
-	ok('clients: flat list with node hostname');
+	assert.ok(v.includes('Link 100 Mbit/s'));
+	ok('clients: flat list with node hostname, wired speed as link speed');
 	v = find(t, (n) => n.tag === 'td');
 	assert.strictEqual(text(v[0]), '1c:86:0b:36:3f:dd');
 	ok('clients: client MAC first');

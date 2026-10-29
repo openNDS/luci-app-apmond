@@ -42,7 +42,7 @@ return view.extend({
 			rate = common.formatKbps(c.tx_bitrate_kbps) + ' / ' + common.formatKbps(c.rx_bitrate_kbps);
 		}
 		else {
-			rate = common.formatMbps(c.speed_mbps);
+			rate = common.formatLink(c.speed_mbps);
 		}
 
 		return [

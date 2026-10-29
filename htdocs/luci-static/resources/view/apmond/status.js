@@ -64,13 +64,9 @@ return view.extend({
 	statusNotes: function(st) {
 		var n = [];
 
+		/* not apmond's passphrase_warning, which says to edit /etc/config/apmond: here it is set in Settings */
 		if (st.default_passphrase === true) {
-			if (st.passphrase_warning) {
-				n.push(String(st.passphrase_warning));
-			}
-			else {
-				n.push(_('The built-in default passphrase is in use. Make ApmonD more secure by adding your own passphrase in Settings, the same on every node.'));
-			}
+			n.push(_('The built-in default passphrase is in use. Set your own passphrase in Settings, the same on every node.'));
 		}
 
 		return n;

@@ -256,8 +256,7 @@ return view.extend({
 			connected = common.formatDuration(c.connected_s);
 		}
 		else {
-			tx = common.formatMbps(c.speed_mbps);
-			rx = tx;
+			tx = common.formatLink(c.speed_mbps);
 		}
 
 		if (c.state == 'stale') {

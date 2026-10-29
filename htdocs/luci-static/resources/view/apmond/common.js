@@ -200,14 +200,14 @@ return baseclass.extend({
 		return (n / 1000).toFixed(1) + ' ' + _('Mbit/s');
 	},
 
-	/* wired speed_mbps -> "100 Mbit/s" */
-	formatMbps: function(v) {
+	/* a wired client's port line speed, speed_mbps -> "Link 100 Mbit/s"; not a bitrate */
+	formatLink: function(v) {
 		var n = parseInt(v, 10);
 
 		if (isNaN(n)) {
 			return '-';
 		}
-		return String(n) + ' ' + _('Mbit/s');
+		return _('Link %s Mbit/s').format(n);
 	},
 
 	/* vxlan { vni, device } -> "vni 42 (vxlan42)", or "-" */

@@ -1,4 +1,6 @@
 luci-app-apmond (2.0.0beta)
+  * Fix - wired clients: the port speed is shown as "Link 100 Mbit/s", not as TX/RX bitrate (Access points and Clients) [bluewavenet]
+  * Fix - Status: the default passphrase notice points to Settings instead of /etc/config/apmond [bluewavenet]
   * Change - for apmond 2.x: every page reads the apmond ubus object through rpcd (rpc.declare) instead of running the apmond script; needs apmond 2.0 or later [bluewavenet]
   * Change - ACL: ubus apmond status, nodes, node, clients (read) and forget (write), uci apmond, and only /usr/sbin/apmond read_log as a command [bluewavenet]
   * Add - common.js with the ubus calls, formatting and the version footer (luci-app-apmond and apmond package version with build commit), replaces version.js [bluewavenet]
