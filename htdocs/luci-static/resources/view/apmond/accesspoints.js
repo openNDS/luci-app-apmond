@@ -7,80 +7,37 @@
 
 /*
  * ApmonD access points: "ubus call apmond nodes" on the collector, every node that has
- * reported with its radios and clients, the collector first. A sender has no node list; it
- * shows its own status line and a link to this page on the collector.
+ * reported, the collector first. A sender has no node list; it shows a link to this page on
+ * the collector.
  *
  * Node rows: state ok / late / lost from the collector; late and lost rows are greyed and a
- * lost node can be forgotten. Client rows: state active / stale; stale clients (gone from their
- * node's report, kept for client_stale_timeout) are greyed and can be forgotten.
+ * lost node can be forgotten. "Show clients" opens the node's detail, indented under its row
+ * on a light background: a radio table (one row per AP) and the client table, both without
+ * columns that would be empty for every row.
  */
 
-/* node macs whose client table is open, kept across refreshes */
+/* node macs whose detail is open, kept across refreshes */
 var expanded = {};
 
 var GREY = 'opacity:0.5';
 
-/*
- * Fixed column widths (percent, each set sums to 100) with table-layout: fixed, so every node's
- * client table lines up with the others. In the narrow (mobile) theme layout the data-title
- * labels are shown instead.
- */
-var NODE_COLS = [ 10, 11, 14, 10, 11, 9, 9, 8, 7, 5, 6 ];
-var CLIENT_COLS = [ 12, 13, 5, 8, 11, 10, 10, 9, 9, 8, 5 ];
-var CELL_STYLE = 'overflow-wrap:anywhere;word-break:break-word';
-var HEAD_STYLE = 'overflow-wrap:normal;word-break:normal';
+/* the detail of a node, indented under its row; theme colours, with fallbacks */
+var DETAIL_STYLE = [
+	'padding:0.5em 0.5em 0.75em 2em',
+	'background:var(--background-color-low, rgba(128,128,128,0.07))',
+	'border-left:3px solid var(--border-color-medium, rgba(128,128,128,0.4))'
+].join(';');
+
+var SUBTITLE_STYLE = 'margin:0.5em 0 0.25em 0;font-weight:bold';
 
 return view.extend({
-	/* a th or td with a fixed width, labelled for the mobile layout */
-	cell: function(tag, width, title, content) {
-		var style = CELL_STYLE;
-		var attrs;
-
-		if (tag == 'th') {
-			style = HEAD_STYLE;
-		}
-
-		attrs = { 'class': tag, 'style': 'width:' + width + '%;' + style };
-		if (title != null) {
-			attrs['data-title'] = title;
-		}
-
-		return E(tag, attrs, [ content ]);
-	},
-
-	/*
-	 * A table with fixed column widths. rows: { cells: [ ... ], grey: bool }, or
-	 * { detail: <tr> } for a full width row.
-	 */
-	fixedTable: function(widths, titles, rows) {
-		var self = this;
-		var head = E('tr', { 'class': 'tr table-titles' }, titles.map(function(t, i) {
-			return self.cell('th', widths[i], null, t);
-		}));
-
-		return E('table', { 'class': 'table', 'style': 'table-layout:fixed;width:100%' }, [ head ].concat(rows.map(function(r) {
-			var attrs = { 'class': 'tr' };
-
-			if (r.detail) {
-				return r.detail;
-			}
-			if (r.grey) {
-				attrs.style = GREY;
-			}
-
-			return E('tr', attrs, r.cells.map(function(v, i) {
-				return self.cell('td', widths[i], titles[i], v);
-			}));
-		})));
-	},
-
 	/* a Forget button; after forgetting, the page data is fetched again */
 	forgetButton: function(what, mac) {
 		var self = this;
 
 		return E('button', {
 			'class': 'btn cbi-button cbi-button-remove',
-			'title': _('Remove it from the collector now. A node that still reports comes back.'),
+			'title': _('Remove it from the collector now. A node or client that still reports comes back.'),
 			'click': ui.createHandlerFn(this, function() {
 				var call;
 
@@ -100,7 +57,7 @@ return view.extend({
 		}, [ _('Forget') ]);
 	},
 
-	/* "1.2.3.4/24" lines, or "-" */
+	/* IPv4 addresses without the prefix length, one per line, or "-" */
 	renderIPv4: function(v) {
 		var addrs = common.parseIPv4(v);
 		var out = [];
@@ -113,35 +70,30 @@ return view.extend({
 			if (i) {
 				out.push(E('br'));
 			}
-			out.push(a);
+			out.push(E('span', { 'title': a }, [ common.stripPrefix(a) ]));
 		});
 
 		return E('span', {}, out);
 	},
 
 	/*
-	 * ULA cell: a link to that node's Access points page, in a new window; "-" when it has
-	 * none. This node's own ULA is plain text: a link would only open this page again.
+	 * LuCI cell: a short "LuCI" link to that node's Access points page over its ULA, in a new
+	 * window, with the full ULA as tooltip; "-" when it has no ULA. This node's own row says
+	 * "this node", as a link would only open this page again.
 	 */
-	renderULA: function(v, own) {
+	renderLuCI: function(v, own) {
 		var ula = common.parseULA(v);
+		var url;
 
 		if (!ula) {
 			return '-';
 		}
 		if (own) {
-			return ula;
+			return E('span', { 'title': ula }, [ _('this node') ]);
 		}
-		return common.link(common.nodeURL(ula, 'accesspoints'), ula);
-	},
 
-	/* "ok, 12s ago" with the report date as tooltip; restart_needed and default passphrase marked */
-	renderState: function(n) {
-		var label = '%s, %s'.format(this.stateLabel(n.state), common.formatAge(n.age_s));
-		var title = _('Last report: %s. Reports: %s, lost: %s').format(
-			common.formatDate(n.last_report_date), common.text(n.reports), common.text(n.lost_reports));
-
-		return E('span', { 'title': title }, [ label ]);
+		url = common.nodeURL(ula, 'accesspoints');
+		return E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': ula }, [ _('LuCI') ]);
 	},
 
 	stateLabel: function(s) {
@@ -154,16 +106,19 @@ return view.extend({
 		if (s == 'lost') {
 			return _('lost');
 		}
-		if (s == 'active') {
-			return _('active');
-		}
-		if (s == 'stale') {
-			return _('stale');
-		}
 		return common.text(s);
 	},
 
-	/* package version (build commit), in red with a note when the node needs a restart */
+	/* "ok, 12s ago" with the report date as tooltip */
+	renderState: function(n) {
+		var label = '%s, %s'.format(this.stateLabel(n.state), common.formatAge(n.age_s));
+		var title = _('Last report: %s. Reports: %s, lost: %s').format(
+			common.formatDate(n.last_report_date), common.text(n.reports), common.text(n.lost_reports));
+
+		return E('span', { 'title': title }, [ label ]);
+	},
+
+	/* package version, build commit as tooltip, in red with a note when the node needs a restart */
 	renderVersion: function(n) {
 		var v = n.package_version || n.apmond_version;
 		var title = '';
@@ -182,128 +137,112 @@ return view.extend({
 		return E('span', { 'title': title }, [ common.text(v) ]);
 	},
 
-	renderLoad: function(v) {
-		if (!Array.isArray(v)) {
-			return '-';
-		}
-		return v.map(function(l) {
-			return common.text(l);
-		}).join(' / ');
-	},
+	/* the APs of all radios of a node, each with its radio: [ { radio, ap }, ... ] */
+	nodeAPs: function(radios) {
+		var out = [];
 
-	/* one line per radio: "phy0: channel 1 (2412 MHz), HT20, 20 dBm: House-6873 (VLAN 10), guest-6873 (VLAN 20)" */
-	renderRadios: function(radios) {
-		var lines = [];
-
-		if (!Array.isArray(radios) || !radios.length) {
-			return '';
+		if (!Array.isArray(radios)) {
+			return out;
 		}
 
 		radios.forEach(function(r) {
-			var aps = [];
-			var parts = [];
-
-			if (r.channel != null) {
-				parts.push(_('channel %s').format(r.channel));
-			}
-			if (r.frequency_mhz != null) {
-				parts.push('%s MHz'.format(r.frequency_mhz));
-			}
-			if (r.htmode) {
-				parts.push(r.htmode);
-			}
-			else if (r.width_mhz != null) {
-				parts.push('%s MHz'.format(r.width_mhz));
-			}
-			if (r.txpower_dbm != null) {
-				parts.push('%s dBm'.format(r.txpower_dbm));
-			}
-
 			(r.aps || []).forEach(function(ap) {
-				var t = '%s@%s'.format(common.text(ap.ssid), common.text(ap.ifname));
-
-				t = t + ' (' + _('VLAN') + ' ' + common.text(ap.vlan);
-				if (ap.vxlan != null) {
-					t = t + ', ' + common.formatVxlan(ap.vxlan);
-				}
-				t = t + ')';
-				aps.push(t);
+				out.push({ radio: r, ap: ap });
 			});
-
-			if (lines.length) {
-				lines.push(E('br'));
-			}
-			lines.push(E('strong', {}, [ common.text(r.phy) + ': ' ]));
-			lines.push(parts.join(', '));
-			if (aps.length) {
-				lines.push(' \u2014 ' + aps.join(', '));
-			}
 		});
 
-		return E('p', { 'style': 'margin:0.5em 0' }, lines);
+		return out;
 	},
 
-	/* the cells of one client row; nested under a node, so without the node column */
-	clientCells: function(c) {
-		var rx = '-';
-		var tx = '-';
-		var connected = '-';
-		var forget = '';
+	/*
+	 * The radio table of a node: one row per AP with radio (band, channel, mode, power), SSID
+	 * and interface; VLAN and VXLAN only when an AP of this node has one.
+	 */
+	renderRadios: function(radios) {
+		var aps = this.nodeAPs(radios);
+		var cols = [];
+		var hasVlan;
+		var hasVxlan;
+		var head;
+		var rows;
 
-		if (c.kind == 'wifi') {
-			tx = common.formatKbps(c.tx_bitrate_kbps);
-			rx = common.formatKbps(c.rx_bitrate_kbps);
-			connected = common.formatDuration(c.connected_s);
-		}
-		else {
-			tx = common.formatLink(c.speed_mbps);
-		}
-
-		if (c.state == 'stale') {
-			forget = this.forgetButton('client', c.client_mac);
+		if (!aps.length) {
+			return E('em', {}, [ _('No access points') ]);
 		}
 
-		return [
-			c.client_mac,
-			common.formatWhere(c),
-			common.text(c.vlan),
-			common.formatVxlan(c.vxlan),
-			common.renderSignal(c),
-			tx,
-			rx,
-			common.formatBytes(c.rx_bytes),
-			common.formatBytes(c.tx_bytes),
-			E('span', { 'title': common.formatDate(c.last_seen_date) }, [
-				'%s, %s'.format(this.stateLabel(c.state), common.formatAge(c.last_seen_age_s))
-			]),
-			forget
-		];
+		cols.push({ title: _('Radio'), cell: function(x) {
+			return E('span', { 'title': common.text(x.radio.phy) }, [ common.formatRadio(x.radio) ]);
+		} });
+		cols.push({ title: _('SSID'), cell: function(x) {
+			return E('span', { 'title': common.text(x.ap.bssid) }, [ common.text(x.ap.ssid) ]);
+		} });
+		cols.push({ title: _('Interface'), cell: function(x) {
+			return common.text(x.ap.ifname);
+		} });
+
+		hasVlan = common.anyValue(aps, function(x) {
+			return x.ap.vlan;
+		});
+		hasVxlan = common.anyValue(aps, function(x) {
+			return x.ap.vxlan;
+		});
+
+		if (hasVlan) {
+			cols.push({ title: _('VLAN'), cell: function(x) {
+				return common.text(x.ap.vlan);
+			} });
+		}
+
+		if (hasVxlan) {
+			cols.push({ title: _('VXLAN'), cell: function(x) {
+				return common.formatVxlan(x.ap.vxlan);
+			} });
+		}
+
+		head = E('tr', { 'class': 'tr table-titles' }, cols.map(function(col) {
+			return E('th', { 'class': 'th' }, [ col.title ]);
+		}));
+
+		rows = aps.map(function(x) {
+			return E('tr', { 'class': 'tr' }, cols.map(function(col) {
+				return E('td', { 'class': 'td', 'data-title': col.title }, [ col.cell(x) ]);
+			}));
+		});
+
+		return E('table', { 'class': 'table' }, [ head ].concat(rows));
 	},
 
 	renderClients: function(node) {
 		var self = this;
 		var clients = node.clients || [];
-		var rows;
 
 		if (!clients.length) {
 			return E('em', {}, [ _('No clients') ]);
 		}
 
-		rows = clients.map(function(c) {
-			return {
-				cells: self.clientCells(c),
-				grey: (c.state == 'stale')
-			};
+		return common.renderClientTable(clients, {
+			forget: function(mac) {
+				return self.forgetButton('client', mac);
+			}
 		});
+	},
 
-		return this.fixedTable(CLIENT_COLS, [
-			_('Client MAC'), _('SSID@interface or port@bridge'), _('VLAN'), _('VXLAN'), _('Signal'),
-			_('TX bitrate'), _('RX bitrate'), _('RX bytes'), _('TX bytes'), _('Last seen'), ' '
-		], rows);
+	/* the detail of a node: radios and clients */
+	renderDetail: function(n) {
+		return E('div', { 'style': DETAIL_STYLE }, [
+			E('div', { 'style': SUBTITLE_STYLE }, [ _('Radios') ]),
+			this.renderRadios(n.radios),
+			E('div', { 'style': SUBTITLE_STYLE }, [ _('Clients') ]),
+			this.renderClients(n)
+		]);
 	},
 
 	renderNodes: function(nodes, ownId) {
 		var self = this;
+		var titles = [
+			_('Device'), _('MAC address'), _('LuCI'), _('IPv4 address'), _('State'), _('apmond'),
+			_('Release'), _('Uptime'), _('Free RAM'), _('Clients'), ' '
+		];
 		var rows = [];
 
 		nodes.forEach(function(n) {
@@ -314,15 +253,16 @@ return view.extend({
 			var btn;
 			var forget = '';
 			var clientCount = n.client_count;
+			var attrs = { 'class': 'tr' };
+			var cells;
 
 			if (!open) {
 				detailStyle = 'display:none';
 			}
 
 			detail = E('tr', { 'class': 'tr', 'style': detailStyle }, [
-				E('td', { 'class': 'td', 'colspan': String(NODE_COLS.length), 'style': 'flex:1 1 100%' }, [
-					self.renderRadios(n.radios),
-					self.renderClients(n)
+				E('td', { 'class': 'td', 'colspan': String(titles.length), 'style': 'flex:1 1 100%;padding:0' }, [
+					self.renderDetail(n)
 				])
 			]);
 
@@ -349,32 +289,38 @@ return view.extend({
 				clientCount = (n.clients || []).length;
 			}
 
-			rows.push({
-				cells: [
-					E('span', { 'title': common.text(n.model) }, [ common.text(n.hostname) ]),
-					n.node_mac,
-					self.renderULA(n.node_ula, own),
-					self.renderIPv4(n.ipv4_addresses),
-					self.renderState(n),
-					self.renderVersion(n),
-					common.text(n.openwrt_release),
-					common.formatDuration(n.uptime_s),
-					common.formatKiB(n.free_ram_kb),
-					String(clientCount),
-					E('span', {}, [ btn, ' ', forget ])
-				],
-				grey: (n.state != null && n.state != 'ok')
-			});
-			rows.push({ detail: detail });
+			if (n.state != null && n.state != 'ok') {
+				attrs.style = GREY;
+			}
+
+			cells = [
+				E('span', { 'title': common.text(n.model) }, [ common.text(n.hostname) ]),
+				n.node_mac,
+				self.renderLuCI(n.node_ula, own),
+				self.renderIPv4(n.ipv4_addresses),
+				self.renderState(n),
+				self.renderVersion(n),
+				common.text(n.openwrt_release),
+				E('span', { 'title': common.formatDuration(n.uptime_s) }, [ common.formatUptime(n.uptime_s) ]),
+				common.formatKiB(n.free_ram_kb),
+				String(clientCount),
+				E('span', { 'style': 'white-space:nowrap' }, [ btn, ' ', forget ])
+			];
+
+			rows.push(E('tr', attrs, cells.map(function(v, i) {
+				return E('td', { 'class': 'td', 'data-title': titles[i] }, [ v ]);
+			})));
+			rows.push(detail);
 		});
 
-		return this.fixedTable(NODE_COLS, [
-			_('Device'), _('MAC address'), _('ULA'), _('IPv4 address'), _('State'), _('apmond'),
-			_('Release'), _('Uptime'), _('Free RAM'), _('Clients'), ' '
-		], rows);
+		return E('table', { 'class': 'table' }, [
+			E('tr', { 'class': 'tr table-titles' }, titles.map(function(t) {
+				return E('th', { 'class': 'th' }, [ t ]);
+			}))
+		].concat(rows));
 	},
 
-	/* the nodes that use the built-in default passphrase, for a warning on the collector */
+	/* the nodes that use the built-in default passphrase, for a notice on the collector */
 	defaultPassphraseNodes: function(nodes) {
 		return nodes.filter(function(n) {
 			return n.default_passphrase === true;

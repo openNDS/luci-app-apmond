@@ -1,0 +1,31 @@
+{
+	"version": "2.0.0beta",
+	"package_version": "2.0.0_beta-r16",
+	"build_commit": "7b2f226",
+	"running_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+	"installed_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+	"restart_needed": false,
+	"protocol": 2,
+	"id": "94:83:c4:a2:8e:c9",
+	"role": "collector",
+	"port": 2468,
+	"key_epoch": 0,
+	"default_passphrase": false,
+	"role_reason": "collector: upstream gateway detected and fd46:31d0:9fff:36c8::1 claimed",
+	"node_ula": "fd46:31d0:9fff:36c8:9683:c4ff:fea2:8ec9",
+	"collector_ula": "fd46:31d0:9fff:36c8::1",
+	"clock_synced": true,
+	"reports_sent": 285,
+	"reports_failed": 0,
+	"last_status": 200,
+	"debuglevel": 1,
+	"blocks": [],
+	"collector_counters": {
+		"accepted": 848,
+		"auth_failed": 0,
+		"rejected_time_or_replay": 0,
+		"malformed": 0
+	},
+	"nodes": 3,
+	"clients": 3
+}

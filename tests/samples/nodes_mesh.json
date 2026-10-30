@@ -1,0 +1,329 @@
+{
+	"nodes": [
+		{
+			"node_mac": "94:83:c4:a2:8e:c9",
+			"hostname": "meshnode-8ec9",
+			"model": "GL.iNet GL-MT6000",
+			"apmond_version": "2.0.0beta",
+			"package_version": "2.0.0_beta-r16",
+			"build_commit": "7b2f226",
+			"running_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+			"installed_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+			"restart_needed": false,
+			"openwrt_release": "25.12.5",
+			"role": "collector",
+			"uptime_s": 1403778,
+			"load": [
+				"0.60",
+				"0.59",
+				"0.56"
+			],
+			"free_ram_kb": 854024,
+			"free_flash_kb": 7382680,
+			"cpu_temperature_c": 51,
+			"cpu_frequency_mhz": null,
+			"ipv4_addresses": [
+				"192.168.111.1/24"
+			],
+			"node_ula": "fd46:31d0:9fff:36c8:9683:c4ff:fea2:8ec9",
+			"state": "ok",
+			"age_s": 28,
+			"last_report": 1793378292,
+			"last_report_date": "Fri_Oct_30_16:38:12_UTC_2026",
+			"source": "local",
+			"reports": 285,
+			"lost_reports": 0,
+			"default_passphrase": false,
+			"client_count": 1,
+			"radios": [
+				{
+					"phy": "phy0",
+					"channel": 1,
+					"frequency_mhz": 2412,
+					"htmode": "NOHT",
+					"txpower_dbm": 20,
+					"aps": [
+						{
+							"ifname": "vxradio0",
+							"ssid": "VTunnel-2g-8ec9-r0p0",
+							"bssid": "96:83:C4:A6:8E:C9",
+							"vlan": null,
+							"vxlan": null
+						},
+						{
+							"ifname": "phy0-ap0",
+							"ssid": "MeshGate-2g-8ec9-r0p0",
+							"bssid": "96:83:C4:AD:8E:C9",
+							"vlan": null,
+							"vxlan": null
+						}
+					]
+				},
+				{
+					"phy": "phy1",
+					"channel": 36,
+					"frequency_mhz": 5180,
+					"htmode": "NOHT",
+					"txpower_dbm": 23,
+					"aps": [
+						{
+							"ifname": "vxradio1",
+							"ssid": "VTunnel-5g-8ec9-r1p1",
+							"bssid": "96:83:C4:A5:8E:C9",
+							"vlan": null,
+							"vxlan": null
+						},
+						{
+							"ifname": "phy1-ap1",
+							"ssid": "MeshGate-5g-8ec9-r1p1",
+							"bssid": "96:83:C4:A9:8E:C9",
+							"vlan": null,
+							"vxlan": null
+						}
+					]
+				}
+			],
+			"blocks": {},
+			"clients": [
+				{
+					"client_mac": "1c:86:0b:36:3f:dd",
+					"kind": "wired",
+					"state": "active",
+					"last_seen": 1793378292,
+					"last_seen_date": "Fri_Oct_30_16:38:12_UTC_2026",
+					"last_seen_age_s": 28,
+					"bridge": "br-lan",
+					"port": "lan5",
+					"vlan": null,
+					"vxlan": null,
+					"speed_mbps": 100
+				}
+			]
+		},
+		{
+			"node_mac": "94:83:c4:81:7a:65",
+			"hostname": "meshnode-7a65",
+			"model": "GL.iNet GL-MT3000",
+			"apmond_version": "2.0.0beta",
+			"package_version": "2.0.0_beta-r16",
+			"build_commit": "7b2f226",
+			"running_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+			"installed_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+			"restart_needed": false,
+			"openwrt_release": "25.12.2",
+			"role": "peer",
+			"uptime_s": 14790,
+			"load": [
+				"0.86",
+				"0.73",
+				"0.67"
+			],
+			"free_ram_kb": 379376,
+			"free_flash_kb": 203528,
+			"cpu_temperature_c": 59,
+			"cpu_frequency_mhz": null,
+			"ipv4_addresses": [
+				"192.168.111.159/24"
+			],
+			"node_ula": "fd46:31d0:9fff:36c8:9683:c4ff:fe81:7a65",
+			"state": "ok",
+			"age_s": 23,
+			"last_report": 1793378297,
+			"last_report_date": "Fri_Oct_30_16:38:17_UTC_2026",
+			"source": "fd46:31d0:9fff:36c8:9683:c4ff:fe81:7a65",
+			"reports": 282,
+			"lost_reports": 0,
+			"default_passphrase": false,
+			"client_count": 0,
+			"radios": [
+				{
+					"phy": "phy1",
+					"channel": 36,
+					"frequency_mhz": 5180,
+					"htmode": "HE80",
+					"txpower_dbm": 23,
+					"aps": [
+						{
+							"ifname": "phy1-ap1",
+							"ssid": "MeshGate-5g-7a65-r1p1",
+							"bssid": "96:83:C4:84:7A:65",
+							"vlan": null,
+							"vxlan": null
+						},
+						{
+							"ifname": "vxradio1",
+							"ssid": "VTunnel-5g-7a65-r1p1",
+							"bssid": "96:83:C4:86:7A:65",
+							"vlan": null,
+							"vxlan": {
+								"vni": 47767,
+								"device": "vxlan69"
+							}
+						}
+					]
+				},
+				{
+					"phy": "phy0",
+					"channel": 1,
+					"frequency_mhz": 2412,
+					"htmode": "HE40",
+					"txpower_dbm": 20,
+					"aps": [
+						{
+							"ifname": "vxradio0",
+							"ssid": "VTunnel-2g-7a65-r0p0",
+							"bssid": "96:83:C4:85:7A:65",
+							"vlan": null,
+							"vxlan": {
+								"vni": 47767,
+								"device": "vxlan69"
+							}
+						},
+						{
+							"ifname": "phy0-ap0",
+							"ssid": "MeshGate-2g-7a65-r0p0",
+							"bssid": "96:83:C4:83:7A:65",
+							"vlan": null,
+							"vxlan": null
+						}
+					]
+				}
+			],
+			"blocks": {},
+			"clients": [
+				{
+					"client_mac": "16:ce:1e:c9:a5:be",
+					"kind": "wifi",
+					"state": "stale",
+					"last_seen": 1793377993,
+					"last_seen_date": "Fri_Oct_30_16:33:13_UTC_2026",
+					"last_seen_age_s": 327,
+					"ap_ssid": "VTunnel-5g-7a65-r1p1",
+					"ap_ifname": "vxradio1",
+					"ap_bssid": "96:83:C4:86:7A:65",
+					"vlan": null,
+					"vxlan": {
+						"vni": 47767,
+						"device": "vxlan69"
+					},
+					"signal_avg_dbm": -43,
+					"signal_dbm": -48,
+					"ack_signal_avg_dbm": null,
+					"tx_bitrate_kbps": 6000,
+					"rx_bitrate_kbps": 390000,
+					"tx_bytes": 662,
+					"rx_bytes": 1783,
+					"tx_retries": 0,
+					"connected_s": 3,
+					"inactive_ms": 1240
+				}
+			]
+		},
+		{
+			"node_mac": "94:83:c4:7f:ef:b0",
+			"hostname": "meshnode-efb0",
+			"model": "GL.iNet GL-MT3000",
+			"apmond_version": "2.0.0beta",
+			"package_version": "2.0.0_beta-r16",
+			"build_commit": "7b2f226",
+			"running_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+			"installed_sha256": "2f2704d5c1c96726dbbe5f15f25d72994dbc1f8542136d9f346dcee67c5f27f3",
+			"restart_needed": false,
+			"openwrt_release": "25.12.4",
+			"role": "peer",
+			"uptime_s": 421823,
+			"load": [
+				"0.63",
+				"0.62",
+				"0.57"
+			],
+			"free_ram_kb": 379372,
+			"free_flash_kb": 203724,
+			"cpu_temperature_c": 59,
+			"cpu_frequency_mhz": null,
+			"ipv4_addresses": [
+				"192.168.111.222/24"
+			],
+			"node_ula": "fd46:31d0:9fff:36c8:9683:c4ff:fe7f:efb0",
+			"state": "ok",
+			"age_s": 9,
+			"last_report": 1793378311,
+			"last_report_date": "Fri_Oct_30_16:38:31_UTC_2026",
+			"source": "fd46:31d0:9fff:36c8:9483:c4ff:fe80:efb0",
+			"reports": 281,
+			"lost_reports": 1,
+			"default_passphrase": false,
+			"client_count": 1,
+			"radios": [
+				{
+					"phy": "phy1",
+					"channel": 36,
+					"frequency_mhz": 5180,
+					"htmode": "HE80",
+					"txpower_dbm": 23,
+					"aps": [
+						{
+							"ifname": "phy1-ap1",
+							"ssid": "MeshGate-5g-efb0-r1p1",
+							"bssid": "96:83:C4:84:EF:B0",
+							"vlan": null,
+							"vxlan": null
+						},
+						{
+							"ifname": "vxradio1",
+							"ssid": "VTunnel-5g-efb0-r1p1",
+							"bssid": "96:83:C4:86:EF:B0",
+							"vlan": null,
+							"vxlan": {
+								"vni": 47767,
+								"device": "vxlan69"
+							}
+						}
+					]
+				},
+				{
+					"phy": "phy0",
+					"channel": 1,
+					"frequency_mhz": 2412,
+					"htmode": "HE40",
+					"txpower_dbm": 20,
+					"aps": [
+						{
+							"ifname": "vxradio0",
+							"ssid": "VTunnel-2g-efb0-r0p0",
+							"bssid": "96:83:C4:85:EF:B0",
+							"vlan": null,
+							"vxlan": {
+								"vni": 47767,
+								"device": "vxlan69"
+							}
+						},
+						{
+							"ifname": "phy0-ap0",
+							"ssid": "MeshGate-2g-efb0-r0p0",
+							"bssid": "96:83:C4:83:EF:B0",
+							"vlan": null,
+							"vxlan": null
+						}
+					]
+				}
+			],
+			"blocks": {},
+			"clients": [
+				{
+					"client_mac": "ec:71:db:89:fe:d4",
+					"kind": "wired",
+					"state": "active",
+					"last_seen": 1793378307,
+					"last_seen_date": "Fri_Oct_30_16:38:27_UTC_2026",
+					"last_seen_age_s": 13,
+					"bridge": "br-lan",
+					"port": "eth1",
+					"vlan": null,
+					"vxlan": null,
+					"speed_mbps": 100
+				}
+			]
+		}
+	]
+}

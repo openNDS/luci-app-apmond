@@ -1,0 +1,62 @@
+{
+	"clients": [
+		{
+			"client_mac": "1c:86:0b:36:3f:dd",
+			"node_mac": "94:83:c4:a2:8e:c9",
+			"node_hostname": "meshnode-8ec9",
+			"kind": "wired",
+			"state": "active",
+			"last_seen": 1793378292,
+			"last_seen_date": "Fri_Oct_30_16:38:12_UTC_2026",
+			"last_seen_age_s": 28,
+			"bridge": "br-lan",
+			"port": "lan5",
+			"vlan": null,
+			"vxlan": null,
+			"speed_mbps": 100
+		},
+		{
+			"client_mac": "16:ce:1e:c9:a5:be",
+			"node_mac": "94:83:c4:81:7a:65",
+			"node_hostname": "meshnode-7a65",
+			"kind": "wifi",
+			"state": "stale",
+			"last_seen": 1793377993,
+			"last_seen_date": "Fri_Oct_30_16:33:13_UTC_2026",
+			"last_seen_age_s": 327,
+			"ap_ssid": "VTunnel-5g-7a65-r1p1",
+			"ap_ifname": "vxradio1",
+			"ap_bssid": "96:83:C4:86:7A:65",
+			"vlan": null,
+			"vxlan": {
+				"vni": 47767,
+				"device": "vxlan69"
+			},
+			"signal_avg_dbm": -43,
+			"signal_dbm": -48,
+			"ack_signal_avg_dbm": null,
+			"tx_bitrate_kbps": 6000,
+			"rx_bitrate_kbps": 390000,
+			"tx_bytes": 662,
+			"rx_bytes": 1783,
+			"tx_retries": 0,
+			"connected_s": 3,
+			"inactive_ms": 1240
+		},
+		{
+			"client_mac": "ec:71:db:89:fe:d4",
+			"node_mac": "94:83:c4:7f:ef:b0",
+			"node_hostname": "meshnode-efb0",
+			"kind": "wired",
+			"state": "active",
+			"last_seen": 1793378307,
+			"last_seen_date": "Fri_Oct_30_16:38:27_UTC_2026",
+			"last_seen_age_s": 13,
+			"bridge": "br-lan",
+			"port": "eth1",
+			"vlan": null,
+			"vxlan": null,
+			"speed_mbps": 100
+		}
+	]
+}

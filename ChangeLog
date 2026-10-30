@@ -1,4 +1,8 @@
 luci-app-apmond (2.0.0beta)
+  * Change - Access points: easier to read; ULA as a short LuCI link with the address as tooltip, IPv4 without the prefix length, uptime in two units [bluewavenet]
+  * Change - Access points: one radio table per node, a row per AP with band, channel, mode, power, SSID and interface, VLAN and VXLAN columns only when used [bluewavenet]
+  * Change - Access points and Clients: client columns that are empty for every client are left out, Wi-Fi signal and TX / RX bitrates as "-43 dBm" and "6.0 / 390.0 Mbit/s" [bluewavenet]
+  * Change - Access points: each node's radios and clients are indented under its row on a light theme background [bluewavenet]
   * Fix - wired clients: the port speed is shown as "Link 100 Mbit/s", not as TX/RX bitrate (Access points and Clients) [bluewavenet]
   * Fix - Status: the default passphrase notice points to Settings instead of /etc/config/apmond [bluewavenet]
   * Change - for apmond 2.x: every page reads the apmond ubus object through rpcd (rpc.declare) instead of running the apmond script; needs apmond 2.0 or later [bluewavenet]

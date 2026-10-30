@@ -26,14 +26,17 @@ Services > ApmonD has five tabs:
 * **Status** - `ubus call apmond status` in groups, refreshed every 10 seconds. A replaced binary
   (restart needed), an unsynced clock, a rejected last report and the default passphrase are
   highlighted.
-* **Access points** - on the collector, `ubus call apmond nodes`: one row per node with its ULA
-  (a link to that node's page), IPv4 addresses, state (ok / late / lost and the report age),
-  apmond package version and build, release, uptime, free RAM and clients, and a button to show
-  its radios and clients (client MAC, SSID@interface or port@bridge, VLAN, VXLAN, signal,
-  bitrates, bytes, last seen). Late and lost nodes and stale clients are greyed out, and lost
-  nodes and stale clients have a Forget button. On a sender, a link to the page on the collector.
+* **Access points** - on the collector, `ubus call apmond nodes`: one row per node with a short
+  LuCI link to that node (its ULA as tooltip), IPv4 addresses, state (ok / late / lost and the
+  report age), apmond package version and build, release, uptime, free RAM and clients. "Show
+  clients" opens the node's detail, indented under its row: a radio table (one row per AP: band,
+  channel, mode, power, SSID, interface, and VLAN / VXLAN when used) and the client table.
+  Client columns that are empty for every client are left out. Late and lost nodes and stale
+  clients are greyed out, and lost nodes and stale clients have a Forget button. On a sender, a
+  link to the page on the collector.
 * **Clients** - on the collector, `ubus call apmond clients` with stale clients: every client of
-  every node in one list, with a filter box and Forget for stale clients.
+  every node in one list, the same columns as on Access points plus the node, with a filter box
+  and Forget for stale clients.
 * **Log** - `apmond read_log`, with Refresh and Follow (re-read every 10 seconds).
 
 ## How it works

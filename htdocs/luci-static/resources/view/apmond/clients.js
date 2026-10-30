@@ -7,12 +7,11 @@
 
 /*
  * ApmonD clients: "ubus call apmond clients {include_stale: true}" on the collector, one list
- * of every client of every access point, in node order then by MAC. Stale clients (gone from
- * their node's report, kept for client_stale_timeout) are greyed out and can be forgotten.
- * The filter box matches any text of a row (MAC, node, SSID, port, VLAN).
+ * of every client of every access point, in node order then by MAC. The same table as under
+ * each node on the Access points page, plus the node: columns empty for every client are left
+ * out, stale clients are greyed out and can be forgotten. The filter box matches the MAC, node,
+ * SSID, interface, port, bridge, VLAN and VXLAN of a client.
  */
-
-var GREY = 'opacity:0.5';
 
 /* the filter text, kept across refreshes */
 var filterText = '';
@@ -34,45 +33,31 @@ return view.extend({
 		}, [ _('Forget') ]);
 	},
 
-	/* the text cells of one client, also used by the filter */
-	clientTexts: function(c) {
-		var rate = '-';
-
-		if (c.kind == 'wifi') {
-			rate = common.formatKbps(c.tx_bitrate_kbps) + ' / ' + common.formatKbps(c.rx_bitrate_kbps);
-		}
-		else {
-			rate = common.formatLink(c.speed_mbps);
-		}
-
-		return [
+	/* the text the filter looks in */
+	filterTextOf: function(c) {
+		var parts = [
 			c.client_mac,
-			common.text(c.node_hostname),
-			common.text(c.node_mac),
+			c.node_hostname,
+			c.node_mac,
 			common.formatWhere(c),
 			common.text(c.vlan),
-			common.formatVxlan(c.vxlan),
-			rate,
-			'%s, %s'.format(c.state == 'stale' ? _('stale') : _('active'), common.formatAge(c.last_seen_age_s))
+			common.formatVxlan(c.vxlan)
 		];
+
+		return parts.join(' ').toLowerCase();
 	},
 
 	/* does client c match the filter text? */
 	matches: function(c, f) {
-		var t;
-
 		if (!f) {
 			return true;
 		}
-
-		t = this.clientTexts(c).join(' ').toLowerCase();
-		return t.indexOf(f.toLowerCase()) >= 0;
+		return this.filterTextOf(c).indexOf(f.toLowerCase()) >= 0;
 	},
 
 	renderClients: function(clients) {
 		var self = this;
 		var shown;
-		var rows;
 
 		if (!clients.length) {
 			return E('em', {}, [ _('No clients') ]);
@@ -82,44 +67,16 @@ return view.extend({
 			return self.matches(c, filterText);
 		});
 
-		rows = shown.map(function(c) {
-			var texts = self.clientTexts(c);
-			var attrs = { 'class': 'tr' };
-			var titles = [
-				_('Client MAC'), _('Node'), _('Node MAC'), _('SSID@interface or port@bridge'),
-				_('VLAN'), _('VXLAN'), _('TX / RX bitrate'), _('Last seen')
-			];
-			var cells;
-			var forget = '';
+		if (!shown.length) {
+			return E('em', {}, [ _('No client matches the filter') ]);
+		}
 
-			if (c.state == 'stale') {
-				attrs.style = GREY;
-				forget = self.forgetButton(c.client_mac);
+		return common.renderClientTable(shown, {
+			node: true,
+			forget: function(mac) {
+				return self.forgetButton(mac);
 			}
-
-			cells = texts.map(function(t, i) {
-				return E('td', { 'class': 'td', 'data-title': titles[i] }, [ t ]);
-			});
-			cells.splice(4, 0, E('td', { 'class': 'td', 'data-title': _('Signal') }, [ common.renderSignal(c) ]));
-			cells.push(E('td', { 'class': 'td' }, [ forget ]));
-
-			return E('tr', attrs, cells);
 		});
-
-		return E('table', { 'class': 'table' }, [
-			E('tr', { 'class': 'tr table-titles' }, [
-				E('th', { 'class': 'th' }, [ _('Client MAC') ]),
-				E('th', { 'class': 'th' }, [ _('Node') ]),
-				E('th', { 'class': 'th' }, [ _('Node MAC') ]),
-				E('th', { 'class': 'th' }, [ _('SSID@interface or port@bridge') ]),
-				E('th', { 'class': 'th' }, [ _('Signal') ]),
-				E('th', { 'class': 'th' }, [ _('VLAN') ]),
-				E('th', { 'class': 'th' }, [ _('VXLAN') ]),
-				E('th', { 'class': 'th' }, [ _('TX / RX bitrate') ]),
-				E('th', { 'class': 'th' }, [ _('Last seen') ]),
-				E('th', { 'class': 'th' }, [ ' ' ])
-			])
-		].concat(rows));
 	},
 
 	/* resolves to { st, clients } */

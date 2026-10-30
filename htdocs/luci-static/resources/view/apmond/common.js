@@ -190,14 +190,251 @@ return baseclass.extend({
 		return _('%sd ago').format(Math.floor(s / 86400));
 	},
 
-	/* tx/rx_bitrate_kbps -> "72.2 Mbit/s" */
-	formatKbps: function(v) {
-		var n = parseInt(v, 10);
+	/* uptime in two units: "16d 5h", "3h 12m", "4m 10s", "12s" */
+	formatUptime: function(v) {
+		var s = parseInt(v, 10);
+		var d;
+		var h;
+		var m;
 
-		if (isNaN(n)) {
+		if (isNaN(s)) {
 			return '-';
 		}
-		return (n / 1000).toFixed(1) + ' ' + _('Mbit/s');
+
+		d = Math.floor(s / 86400);
+		h = Math.floor(s / 3600) % 24;
+		m = Math.floor(s / 60) % 60;
+
+		if (d) {
+			return d + 'd ' + h + 'h';
+		}
+		if (h) {
+			return h + 'h ' + m + 'm';
+		}
+		if (m) {
+			return m + 'm ' + (s % 60) + 's';
+		}
+		return s + 's';
+	},
+
+	/* "192.168.111.1/24" -> "192.168.111.1" */
+	stripPrefix: function(a) {
+		return String(a).replace(/\/[0-9]+$/, '');
+	},
+
+	/* Wi-Fi tx/rx_bitrate_kbps -> "6.0 / 390.0 Mbit/s" */
+	formatRates: function(c) {
+		var tx = parseInt(c.tx_bitrate_kbps, 10);
+		var rx = parseInt(c.rx_bitrate_kbps, 10);
+		var txt = '-';
+		var rxt = '-';
+
+		if (!isNaN(tx)) {
+			txt = (tx / 1000).toFixed(1);
+		}
+		if (!isNaN(rx)) {
+			rxt = (rx / 1000).toFixed(1);
+		}
+		if (isNaN(tx) && isNaN(rx)) {
+			return '-';
+		}
+		return txt + ' / ' + rxt + ' ' + _('Mbit/s');
+	},
+
+	/* the rate cell: TX / RX bitrates for Wi-Fi, the port's link speed for wired */
+	formatClientRate: function(c) {
+		if (c.kind == 'wifi') {
+			return this.formatRates(c);
+		}
+		return this.formatLink(c.speed_mbps);
+	},
+
+	/* RX / TX bytes: "1.74 KiB / 662 B", "-" when the client has neither */
+	formatClientBytes: function(c) {
+		if (c.rx_bytes == null && c.tx_bytes == null) {
+			return '-';
+		}
+		return this.formatBytes(c.rx_bytes) + ' / ' + this.formatBytes(c.tx_bytes);
+	},
+
+	/* a radio as "2.4 GHz ch 1 HE40, 20 dBm" */
+	formatRadio: function(r) {
+		var f = parseInt(r.frequency_mhz, 10);
+		var band = '';
+		var t;
+
+		if (!isNaN(f)) {
+			if (f < 3000) {
+				band = '2.4 GHz';
+			}
+			else if (f < 5925) {
+				band = '5 GHz';
+			}
+			else {
+				band = '6 GHz';
+			}
+		}
+
+		t = band;
+		if (r.channel != null) {
+			t = (t + ' ' + _('ch %s').format(r.channel)).trim();
+		}
+		if (r.htmode) {
+			t = t + ' ' + r.htmode;
+		}
+		else if (r.width_mhz != null) {
+			t = t + ' ' + r.width_mhz + ' MHz';
+		}
+		if (r.txpower_dbm != null) {
+			t = t + ', ' + r.txpower_dbm + ' dBm';
+		}
+		if (t === '') {
+			return this.text(r.phy);
+		}
+		return t;
+	},
+
+	/* true when any item has a value other than null / "" for fn(item) */
+	anyValue: function(items, fn) {
+		return items.some(function(x) {
+			var v = fn(x);
+
+			return v != null && v !== '';
+		});
+	},
+
+	/*
+	 * The client table columns for a list of clients: a column is left out when it would be
+	 * empty for every client (so wired-only lists show MAC, port@bridge, link speed and
+	 * last seen). opts.node adds the node column (Clients page); opts.forget(mac) returns a
+	 * Forget button for a stale client.
+	 */
+	clientColumns: function(clients, opts) {
+		var self = this;
+		var cols = [];
+		var wifi = clients.filter(function(c) {
+			return c.kind == 'wifi';
+		});
+		var stale = clients.filter(function(c) {
+			return c.state == 'stale';
+		});
+
+		var hasVlan = this.anyValue(clients, function(c) {
+			return c.vlan;
+		});
+		var hasVxlan = this.anyValue(clients, function(c) {
+			return c.vxlan;
+		});
+		var hasBytes = this.anyValue(clients, function(c) {
+			if (c.rx_bytes != null) {
+				return c.rx_bytes;
+			}
+			return c.tx_bytes;
+		});
+		var hasConnected = this.anyValue(wifi, function(c) {
+			return c.connected_s;
+		});
+
+		cols.push({ title: _('Client MAC'), cell: function(c) {
+			return c.client_mac;
+		} });
+
+		if (opts && opts.node) {
+			cols.push({ title: _('Node'), cell: function(c) {
+				return E('span', { 'title': self.text(c.node_mac) }, [ self.text(c.node_hostname) ]);
+			} });
+		}
+
+		cols.push({ title: _('SSID@interface or port@bridge'), cell: function(c) {
+			return self.formatWhere(c);
+		} });
+
+		if (hasVlan) {
+			cols.push({ title: _('VLAN'), cell: function(c) {
+				return self.text(c.vlan);
+			} });
+		}
+
+		if (hasVxlan) {
+			cols.push({ title: _('VXLAN'), cell: function(c) {
+				return self.formatVxlan(c.vxlan);
+			} });
+		}
+
+		if (wifi.length) {
+			cols.push({ title: _('Signal'), cell: function(c) {
+				return self.renderSignal(c);
+			} });
+		}
+
+		if (wifi.length) {
+			cols.push({ title: _('TX / RX bitrate or link'), cell: function(c) {
+				return self.formatClientRate(c);
+			} });
+		}
+		else {
+			cols.push({ title: _('Link'), cell: function(c) {
+				return self.formatClientRate(c);
+			} });
+		}
+
+		if (hasBytes) {
+			cols.push({ title: _('RX / TX bytes'), cell: function(c) {
+				return self.formatClientBytes(c);
+			} });
+		}
+
+		if (hasConnected) {
+			cols.push({ title: _('Connected'), cell: function(c) {
+				if (c.kind != 'wifi') {
+					return '-';
+				}
+				return self.formatDuration(c.connected_s);
+			} });
+		}
+
+		cols.push({ title: _('Last seen'), cell: function(c) {
+			var state = _('active');
+
+			if (c.state == 'stale') {
+				state = _('stale');
+			}
+			return E('span', { 'title': self.formatDate(c.last_seen_date) }, [
+				'%s, %s'.format(state, self.formatAge(c.last_seen_age_s))
+			]);
+		} });
+
+		if (stale.length && opts && opts.forget) {
+			cols.push({ title: ' ', cell: function(c) {
+				if (c.state != 'stale') {
+					return '';
+				}
+				return opts.forget(c.client_mac);
+			} });
+		}
+
+		return cols;
+	},
+
+	/* a client table, stale clients greyed out; see clientColumns() for opts */
+	renderClientTable: function(clients, opts) {
+		var cols = this.clientColumns(clients, opts);
+		var head = E('tr', { 'class': 'tr table-titles' }, cols.map(function(col) {
+			return E('th', { 'class': 'th' }, [ col.title ]);
+		}));
+		var rows = clients.map(function(c) {
+			var attrs = { 'class': 'tr' };
+
+			if (c.state == 'stale') {
+				attrs.style = 'opacity:0.5';
+			}
+
+			return E('tr', attrs, cols.map(function(col) {
+				return E('td', { 'class': 'td', 'data-title': col.title }, [ col.cell(c) ]);
+			}));
+		});
+
+		return E('table', { 'class': 'table' }, [ head ].concat(rows));
 	},
 
 	/* a wired client's port line speed, speed_mbps -> "Link 100 Mbit/s"; not a bitrate */
