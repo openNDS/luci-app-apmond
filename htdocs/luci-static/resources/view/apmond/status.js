@@ -247,10 +247,12 @@ return view.extend({
 
 	render: function(st) {
 		var self = this;
+		var banner = E('div', { 'id': 'apmond-banner' }, [ common.collectorBanner(st) ]);
 		var box = E('div', { 'id': 'apmond-status' }, [ this.renderStatus(st) ]);
 
 		poll.add(function() {
 			return common.getStatus().then(function(s) {
+				dom.content(banner, common.collectorBanner(s));
 				dom.content(box, self.renderStatus(s));
 			});
 		}, 10);
@@ -258,6 +260,7 @@ return view.extend({
 		return E('div', { 'class': 'cbi-map' }, [
 			E('h2', {}, [ _('ApmonD Status') ]),
 			E('div', { 'class': 'cbi-map-descr' }, [ _('The status of apmond on this node, refreshed every 10 seconds.') ]),
+			banner,
 			box,
 			common.footer()
 		]);

@@ -380,14 +380,6 @@ msgstr ""
 msgid "Nodes"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/common.js:575
-msgid "Not a collector."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/apmond/common.js:582
-msgid "Open it on the collector"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/apmond/status.js:189
 msgid "Other"
 msgstr ""
@@ -757,4 +749,20 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/apmond/status.js:137
 msgid "yes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:587
+msgid "Not the collector."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:594
+msgid "This node reports to the collector at %s, which has the data of every access point."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:602
+msgid "Go to collector"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:582
+msgid "This node is the collector."
 msgstr ""

@@ -32,8 +32,12 @@ Services > ApmonD has five tabs:
   clients" opens the node's detail, indented under its row: a radio table (one row per AP: band,
   channel, mode, power, SSID, interface, and VLAN / VXLAN when used) and the client table.
   Client columns that are empty for every client are left out. Late and lost nodes and stale
-  clients are greyed out, and lost nodes and stale clients have a Forget button. On a sender, a
-  link to the page on the collector.
+  clients are greyed out, and lost nodes and stale clients have a Forget button.
+* **Collector banner** - on a sender, Status, Access points and Clients start with "This node
+  reports to the collector at <collector ULA>" and a "Go to collector" button that opens
+  `http://[<collector ULA>]/cgi-bin/luci/admin/services/apmond/accesspoints` in a new tab, so
+  the data of every node can be reached from LuCI on any node. On the collector, a small "This
+  node is the collector." note.
 * **Clients** - on the collector, `ubus call apmond clients` with stale clients: every client of
   every node in one list, the same columns as on Access points plus the node, with a filter box
   and Forget for stale clients.

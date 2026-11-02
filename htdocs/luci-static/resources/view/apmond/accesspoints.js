@@ -7,7 +7,7 @@
 
 /*
  * ApmonD access points: "ubus call apmond nodes" on the collector, every node that has
- * reported, the collector first. A sender has no node list; it shows a link to this page on
+ * reported, the collector first. A sender has no node list; its banner links to this page on
  * the collector.
  *
  * Node rows: state ok / late / lost from the collector; late and lost rows are greyed and a
@@ -347,8 +347,9 @@ return view.extend({
 				_('Could not read the ApmonD status. Is apmond installed, enabled and running?'));
 		}
 
+		out.push(common.collectorBanner(st));
+
 		if (st.role != 'collector') {
-			out.push(common.senderNote(st, 'accesspoints'));
 			return E('div', {}, out);
 		}
 

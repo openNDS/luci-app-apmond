@@ -93,10 +93,13 @@ return view.extend({
 		}
 
 		if (data.st.role != 'collector') {
-			return E('div', {}, [ common.senderNote(data.st, 'clients') ]);
+			return E('div', {}, [ common.collectorBanner(data.st) ]);
 		}
 
-		return this.renderClients(data.clients);
+		return E('div', {}, [
+			common.collectorBanner(data.st),
+			this.renderClients(data.clients)
+		]);
 	},
 
 	refresh: function() {

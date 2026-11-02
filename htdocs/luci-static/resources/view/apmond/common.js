@@ -558,34 +558,50 @@ return baseclass.extend({
 		return E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ label ]);
 	},
 
+	/* the Access points page of the collector, by its ULA, over http */
+	collectorURL: function(ula) {
+		return 'http://[' + ula + ']/cgi-bin/luci/admin/services/apmond/accesspoints';
+	},
+
 	/*
-	 * The note on a sender: it holds no reports; the collector has them, with a link to the
-	 * same page there. null on the collector.
+	 * The banner at the top of the Status, Access points and Clients pages. On a sender: this
+	 * node reports to the collector at <collector ULA>, with a "Go to collector" link to the
+	 * collector's Access points page in a new tab. On the collector: a small note. null while
+	 * the status is unknown.
 	 */
-	senderNote: function(st, page) {
+	collectorBanner: function(st) {
 		var ula;
 		var parts;
 
-		if (st == null || st.role == 'collector') {
+		if (st == null) {
 			return null;
 		}
 
-		ula = this.parseULA(st.collector_ula);
-		parts = [
-			E('strong', {}, [ _('Not a collector.') ]),
-			' ',
-			_('This node reports to the collector, which has the data of every access point.')
-		];
-
-		if (ula) {
-			parts.push(' ');
-			parts.push(_('Open it on the collector'));
-			parts.push(' ');
-			parts.push(this.link(this.nodeURL(ula, page), ula));
-			parts.push('.');
+		if (st.role == 'collector') {
+			return E('p', { 'class': 'apmond-collector-note', 'style': 'font-size:smaller; opacity:0.7' }, [
+				_('This node is the collector.')
+			]);
 		}
 
-		return E('div', { 'class': 'alert-message notice' }, [ E('p', {}, parts) ]);
+		ula = this.parseULA(st.collector_ula);
+		parts = [ E('strong', {}, [ _('Not the collector.') ]), ' ' ];
+
+		if (!ula) {
+			parts.push(_('This node reports to the collector, which has the data of every access point.'));
+			return E('div', { 'class': 'alert-message notice apmond-collector-banner' }, [ E('p', {}, parts) ]);
+		}
+
+		parts.push(_('This node reports to the collector at %s, which has the data of every access point.').format(ula));
+		parts.push(' ');
+		parts.push(E('a', {
+			'class': 'btn cbi-button cbi-button-action',
+			'href': this.collectorURL(ula),
+			'target': '_blank',
+			'rel': 'noopener',
+			'title': this.collectorURL(ula)
+		}, [ _('Go to collector') ]));
+
+		return E('div', { 'class': 'alert-message notice apmond-collector-banner' }, [ E('p', {}, parts) ]);
 	},
 
 	/* the footer text for a status object (null while unknown) */

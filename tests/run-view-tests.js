@@ -192,13 +192,19 @@ function ok(msg) {
 	assert.strictEqual(common.footerText(statusC), 'luci-app-apmond 2.0.0beta, apmond 2.0.0_beta-r14 (66a4b9e)');
 	assert.strictEqual(common.footerText(null), 'luci-app-apmond 2.0.0beta, apmond unknown');
 	ok('common: footer with package version and build commit');
-	t = text(common.senderNote(statusS, 'accesspoints'));
-	assert.ok(t.includes('Not a collector.'));
-	v = find(common.senderNote(statusS, 'accesspoints'), (n) => n.tag === 'a');
+	t = text(common.collectorBanner(statusS));
+	assert.ok(t.includes('Not the collector.'));
+	assert.ok(t.includes('reports to the collector at fd46:cfe5:34c5:6ddd::1'));
+	v = find(common.collectorBanner(statusS), (n) => n.tag === 'a');
 	assert.strictEqual(v.length, 1);
-	assert.ok(v[0].attrs.href.endsWith('//[fd46:cfe5:34c5:6ddd::1]/cgi-bin/luci/admin/services/apmond/accesspoints'));
-	assert.strictEqual(common.senderNote(statusC, 'accesspoints'), null);
-	ok('common: sender note links to the same page on the collector ULA');
+	assert.strictEqual(v[0].attrs.href, 'http://[fd46:cfe5:34c5:6ddd::1]/cgi-bin/luci/admin/services/apmond/accesspoints');
+	assert.strictEqual(v[0].attrs.target, '_blank');
+	assert.ok(text(v[0]).includes('Go to collector'));
+	t = text(common.collectorBanner(statusC));
+	assert.ok(t.includes('This node is the collector.'));
+	assert.strictEqual(find(common.collectorBanner(statusC), (n) => n.tag === 'a').length, 0);
+	assert.strictEqual(common.collectorBanner(null), null);
+	ok('common: collector banner on a sender links to the collector Access points page, small note on the collector');
 
 	ubus = { status: statusC };
 	assert.strictEqual((await common.getStatus()).role, 'collector');
@@ -226,6 +232,13 @@ function ok(msg) {
 	ok('status: restart needed and rejected report are warnings');
 	assert.ok(text(st.renderStatus(null)).includes('Could not read'));
 	ok('status: no daemon');
+	t = text(st.render(statusS));
+	assert.ok(t.includes('reports to the collector at fd46:cfe5:34c5:6ddd::1'));
+	assert.ok(t.includes('Go to collector'));
+	t = text(st.render(statusC));
+	assert.ok(t.includes('This node is the collector.'));
+	assert.ok(!t.includes('Go to collector'));
+	ok('status: collector banner on a sender, small note on the collector');
 
 	// Access points
 	const ap = loadView('accesspoints');
@@ -315,7 +328,7 @@ function ok(msg) {
 	]);
 	ok('access points: Forget calls ubus forget with node_mac / client_mac');
 	t = ap.renderData({ st: statusS, nodes: [] });
-	assert.ok(text(t).includes('Not a collector.'));
+	assert.ok(text(t).includes('Go to collector'));
 	ok('access points: sender page links to the collector');
 
 	// Clients
@@ -336,7 +349,7 @@ function ok(msg) {
 	assert.ok(cl.matches(clients.clients[0], 'eth0.1'));
 	assert.ok(!cl.matches(clients.clients[0], 'nomatch'));
 	ok('clients: filter');
-	assert.ok(text(cl.renderData({ st: statusS, clients: [] })).includes('Not a collector.'));
+	assert.ok(text(cl.renderData({ st: statusS, clients: [] })).includes('Go to collector'));
 	ok('clients: sender page links to the collector');
 
 	// Log
