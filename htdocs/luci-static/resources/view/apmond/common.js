@@ -16,7 +16,7 @@
 
 /* luci-app-apmond version, as apmond: the only place to change at a version bump */
 var last_version = '1.0.1';
-var version = '2.0.0';
+var version = '2.0.1';
 
 var callStatus = rpc.declare({
 	object: 'apmond',
@@ -27,26 +27,30 @@ var callStatus = rpc.declare({
 var callNodes = rpc.declare({
 	object: 'apmond',
 	method: 'nodes',
-	expect: { 'nodes': [] }
+	expect: { 'nodes': [] },
+	reject: true
 });
 
 var callClients = rpc.declare({
 	object: 'apmond',
 	method: 'clients',
 	params: [ 'include_stale' ],
-	expect: { 'clients': [] }
+	expect: { 'clients': [] },
+	reject: true
 });
 
 var callForgetNode = rpc.declare({
 	object: 'apmond',
 	method: 'forget',
-	params: [ 'node_mac' ]
+	params: [ 'node_mac' ],
+	reject: true
 });
 
 var callForgetClient = rpc.declare({
 	object: 'apmond',
 	method: 'forget',
-	params: [ 'client_mac' ]
+	params: [ 'client_mac' ],
+	reject: true
 });
 
 return baseclass.extend({
@@ -538,8 +542,22 @@ return baseclass.extend({
 		]);
 	},
 
-	/* a page on another node, by its ULA, in the scheme this page was loaded with */
-	nodeURL: function(ula, page) {
+	/*
+	 * The host part of a URL: an IPv6 address in brackets, an IPv4 address or a host name as it is.
+	 * null for an empty address.
+	 */
+	urlHost: function(addr) {
+		if (addr == null || addr == '') {
+			return null;
+		}
+		if (String(addr).indexOf(':') >= 0) {
+			return '[' + addr + ']';
+		}
+		return String(addr);
+	},
+
+	/* a page on another node, by its address, in the scheme this page was loaded with */
+	nodeURL: function(addr, page) {
 		var proto = 'https:';
 		var path = '/cgi-bin/luci/admin/services/apmond/' + page;
 
@@ -550,7 +568,7 @@ return baseclass.extend({
 			path = L.url('admin/services/apmond/' + page);
 		}
 
-		return proto + '//[' + ula + ']' + path;
+		return proto + '//' + this.urlHost(addr) + path;
 	},
 
 	/* a link opened in a new window */
@@ -558,9 +576,29 @@ return baseclass.extend({
 		return E('a', { 'href': url, 'target': '_blank', 'rel': 'noopener', 'title': url }, [ label ]);
 	},
 
-	/* the Access points page of the collector, by its ULA, over http */
-	collectorURL: function(ula) {
-		return 'http://[' + ula + ']/cgi-bin/luci/admin/services/apmond/accesspoints';
+	/* the Access points page of the collector, in the scheme this page was loaded with */
+	collectorURL: function(addr) {
+		return this.nodeURL(addr, 'accesspoints');
+	},
+
+	/*
+	 * The address of the collector this sender reports to: status.collector (the address in use:
+	 * the collector ULA, the LAN IPv4 gateway or the configured collector, see collector_via),
+	 * falling back to the collector ULA. null when neither is known.
+	 */
+	collectorAddress: function(st) {
+		var ula;
+
+		if (st.collector != null && st.collector != '') {
+			return String(st.collector);
+		}
+
+		ula = this.parseULA(st.collector_ula);
+		if (ula) {
+			return ula;
+		}
+
+		return null;
 	},
 
 	/*
@@ -570,7 +608,7 @@ return baseclass.extend({
 	 * the status is unknown.
 	 */
 	collectorBanner: function(st) {
-		var ula;
+		var addr;
 		var parts;
 
 		if (st == null) {
@@ -583,22 +621,22 @@ return baseclass.extend({
 			]);
 		}
 
-		ula = this.parseULA(st.collector_ula);
+		addr = this.collectorAddress(st);
 		parts = [ E('strong', {}, [ _('Not the collector.') ]), ' ' ];
 
-		if (!ula) {
+		if (!addr) {
 			parts.push(_('This node reports to the collector, which has the data of every access point.'));
 			return E('div', { 'class': 'alert-message notice apmond-collector-banner' }, [ E('p', {}, parts) ]);
 		}
 
-		parts.push(_('This node reports to the collector at %s, which has the data of every access point.').format(ula));
+		parts.push(_('This node reports to the collector at %s, which has the data of every access point.').format(addr));
 		parts.push(' ');
 		parts.push(E('a', {
 			'class': 'btn cbi-button cbi-button-action',
-			'href': this.collectorURL(ula),
+			'href': this.collectorURL(addr),
 			'target': '_blank',
 			'rel': 'noopener',
-			'title': this.collectorURL(ula)
+			'title': this.collectorURL(addr)
 		}, [ _('Go to collector') ]));
 
 		return E('div', { 'class': 'alert-message notice apmond-collector-banner' }, [ E('p', {}, parts) ]);

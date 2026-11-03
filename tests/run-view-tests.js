@@ -90,6 +90,17 @@ const rpc = {
 			if (r === undefined) {
 				return Promise.reject(new Error('no answer'));
 			}
+			// a number is a ubus status code, as LuCI's rpc gives it: rejected with reject: true,
+			// otherwise resolved with the expect default (or the code itself without expect)
+			if (typeof r === 'number') {
+				if (d.reject) {
+					return Promise.reject(new Error('ubus code ' + r));
+				}
+				if (d.expect) {
+					return Promise.resolve(Object.values(d.expect)[0]);
+				}
+				return Promise.resolve(r);
+			}
 			// rpc.declare's expect: unwrap the named key
 			const key = Object.keys(d.expect || { '': 1 })[0];
 			if (key && r && typeof r === 'object' && key in r) {
@@ -189,15 +200,15 @@ function ok(msg) {
 	assert.strictEqual(common.formatWhere(clients.clients[0]), 'eth0.1@br-lan');
 	assert.strictEqual(common.formatWhere(lost.nodes[1].clients[0]), 'House-f9d1@phy0-ap0');
 	ok('common: port@bridge for wired, SSID@interface for Wi-Fi');
-	assert.strictEqual(common.footerText(statusC), 'luci-app-apmond 2.0.0, apmond 2.0.0_beta-r14 (66a4b9e)');
-	assert.strictEqual(common.footerText(null), 'luci-app-apmond 2.0.0, apmond unknown');
+	assert.strictEqual(common.footerText(statusC), 'luci-app-apmond 2.0.1, apmond 2.0.0_beta-r14 (66a4b9e)');
+	assert.strictEqual(common.footerText(null), 'luci-app-apmond 2.0.1, apmond unknown');
 	ok('common: footer with package version and build commit');
 	t = text(common.collectorBanner(statusS));
 	assert.ok(t.includes('Not the collector.'));
 	assert.ok(t.includes('reports to the collector at fd46:cfe5:34c5:6ddd::1'));
 	v = find(common.collectorBanner(statusS), (n) => n.tag === 'a');
 	assert.strictEqual(v.length, 1);
-	assert.strictEqual(v[0].attrs.href, 'http://[fd46:cfe5:34c5:6ddd::1]/cgi-bin/luci/admin/services/apmond/accesspoints');
+	assert.strictEqual(v[0].attrs.href, 'https://[fd46:cfe5:34c5:6ddd::1]/cgi-bin/luci/admin/services/apmond/accesspoints');
 	assert.strictEqual(v[0].attrs.target, '_blank');
 	assert.ok(text(v[0]).includes('Go to collector'));
 	t = text(common.collectorBanner(statusC));
@@ -205,6 +216,15 @@ function ok(msg) {
 	assert.strictEqual(find(common.collectorBanner(statusC), (n) => n.tag === 'a').length, 0);
 	assert.strictEqual(common.collectorBanner(null), null);
 	ok('common: collector banner on a sender links to the collector Access points page, small note on the collector');
+	v = Object.assign({}, statusS, { collector: '192.168.8.1', collector_via: 'ipv4' });
+	assert.ok(text(common.collectorBanner(v)).includes('reports to the collector at 192.168.8.1'));
+	assert.strictEqual(find(common.collectorBanner(v), (n) => n.tag === 'a')[0].attrs.href, 'https://192.168.8.1/cgi-bin/luci/admin/services/apmond/accesspoints');
+	v = Object.assign({}, statusS, { collector: 'fd00:1::5', collector_via: 'config' });
+	assert.strictEqual(find(common.collectorBanner(v), (n) => n.tag === 'a')[0].attrs.href, 'https://[fd00:1::5]/cgi-bin/luci/admin/services/apmond/accesspoints');
+	v = Object.assign({}, statusS);
+	delete v.collector;
+	assert.strictEqual(find(common.collectorBanner(v), (n) => n.tag === 'a')[0].attrs.href, 'https://[fd46:cfe5:34c5:6ddd::1]/cgi-bin/luci/admin/services/apmond/accesspoints');
+	ok('common: banner links to the collector in use (IPv4 fallback, configured, ULA when collector is missing), in the page scheme');
 
 	ubus = { status: statusC };
 	assert.strictEqual((await common.getStatus()).role, 'collector');
@@ -213,6 +233,12 @@ function ok(msg) {
 	assert.strictEqual(await common.getNodes(), null);
 	assert.strictEqual(await common.getClients(), null);
 	ok('common: ubus errors give null');
+	ubus = { nodes: 4, clients: 4, forget: 4 };
+	assert.strictEqual(await common.getNodes(), null);
+	assert.strictEqual(await common.getClients(), null);
+	await assert.rejects(common.forgetNode('94:83:c4:00:00:01'));
+	await assert.rejects(common.forgetClient('94:83:c4:00:00:02'));
+	ok('common: a nonzero ubus status gives null for nodes and clients, and rejects forget');
 
 	// Status
 	const st = loadView('status');

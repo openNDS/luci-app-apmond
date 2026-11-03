@@ -1,6 +1,24 @@
-# luci-app-apmond 2.0.0 — release notes
+# luci-app-apmond 2.0.1 — release notes
 
-Released Tue, 03 Nov 2026. Tag `v2.0.0` in [openNDS/luci-app-apmond](https://github.com/openNDS/luci-app-apmond).
+Released Tue, 03 Nov 2026. Tag `v2.0.1` in [openNDS/luci-app-apmond](https://github.com/openNDS/luci-app-apmond).
+
+## What's new in 2.0.1
+
+A bug-fix release. All three fixes are in the shared view code (`common.js`); nothing else changed.
+
+* **Go to collector keeps HTTPS.** The collector link uses the scheme the page was loaded with,
+  instead of always `http://`.
+* **Go to collector opens the collector in use.** The banner uses apmond's `collector` address
+  (the collector ULA, the LAN IPv4 gateway fallback or a configured collector), falling back to
+  the collector ULA. IPv6 addresses are bracketed in the URL; IPv4 addresses and names are not.
+* **Failed calls are reported.** A failed nodes or clients call now shows the page's error instead
+  of an empty list, and a failed Forget shows "Could not forget" instead of appearing to succeed.
+
+Compatibility is unchanged: apmond 2.0 or later, OpenWrt 25.12 or later.
+
+---
+
+# luci-app-apmond 2.0.0
 
 ## Overview
 

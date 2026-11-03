@@ -1,3 +1,11 @@
+luci-app-apmond (2.0.1)
+  * Fix - collector banner: the Go to collector link keeps the scheme the page was loaded with (https stays https) instead of always using http [bluewavenet]
+  * Fix - collector banner: links to the collector in use (status collector: the collector ULA, the LAN IPv4 gateway fallback or the configured collector), falling back to collector_ula; IPv6 addresses in brackets, IPv4 and names as they are [bluewavenet]
+  * Fix - a failed nodes or clients call (nonzero ubus status) shows the error instead of an empty list, and a failed Forget shows "Could not forget" instead of succeeding silently (rpc.declare reject) [bluewavenet]
+  * Change - tests: the fake rpc returns ubus status codes as LuCI does; tests for the banner address and scheme and for failed calls [bluewavenet]
+
+ -- Rob White <rob@blue-wave.net>  Tue, 03 Nov 2026 21:00:34 +0000
+
 luci-app-apmond (2.0.0)
   * Fix - Log and the version footer set their text as text, never as HTML [bluewavenet]
   * Fix - Status: a sender that has not sent a report yet (last HTTP status 0) shows "No report has been sent yet." instead of a rejected report [bluewavenet]
