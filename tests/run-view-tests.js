@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 
-const ROOT = path.join(__dirname, '..');
+const ROOT = path.join(__dirname, '..', 'openwrt', 'luci-app-apmond');
 const VIEWS = path.join(ROOT, 'htdocs/luci-static/resources/view/apmond');
 const SAMPLES = path.join(__dirname, 'samples');
 

@@ -2,10 +2,23 @@
 
 LuCI app for [ApmonD](https://github.com/openNDS/apmond), the access point monitoring daemon for OpenWrt.
 
-The source stays in this repository. The [openwrt/luci](https://github.com/openwrt/luci) feed
-carries only `applications/luci-app-apmond/Makefile`, a copy of
-`linux_openwrt/luci-app-apmond/Makefile`, which downloads the tagged release
-from GitHub and installs from it, as the [apmond](https://github.com/openNDS/apmond) package does.
+Development happens here. The app directory `openwrt/luci-app-apmond/` is laid out exactly like
+`applications/luci-app-apmond` in [openwrt/luci](https://github.com/openwrt/luci) (a `luci.mk`
+Makefile, `htdocs/`, `root/` and `po/`), and a feed pull request is a straight copy of it.
+
+## Workflow
+
+* Work is done on a beta branch (for example `2.0.2beta`) and merged to `master` through a pull
+  request in this repository.
+* A release is tagged on `master` (`vX.Y.Z`).
+* For the feed, copy the app directory into an openwrt/luci checkout and open or update the pull
+  request there:
+
+      tools/feed-sync.sh copy  /path/to/openwrt-luci    # replaces applications/luci-app-apmond
+      tools/feed-sync.sh check /path/to/openwrt-luci    # diff only; exit 0 if they match
+
+  The Makefile here is the one that goes into openwrt/luci, so it changes only together with the
+  feed copy.
 
 ## apmond 2.x
 
@@ -34,8 +47,10 @@ Services > ApmonD has five tabs:
   Client columns that are empty for every client are left out. Late and lost nodes and stale
   clients are greyed out, and lost nodes and stale clients have a Forget button.
 * **Collector banner** - on a sender, Status, Access points and Clients start with "This node
-  reports to the collector at <collector ULA>" and a "Go to collector" button that opens
-  `http://[<collector ULA>]/cgi-bin/luci/admin/services/apmond/accesspoints` in a new tab, so
+  reports to the collector at <address>" and a "Go to collector" button that opens the
+  collector's Access points page in a new tab, in the scheme the page was loaded with (https
+  stays https). The address is the collector in use (`collector` in apmond status: the collector
+  ULA, the LAN IPv4 gateway fallback or a configured collector), so
   the data of every access point can be reached from LuCI on any of them. On the collector, a small "This
   node is the collector." note.
 * **Clients** - on the collector, `ubus call apmond clients` with stale clients: every client of
@@ -47,36 +62,34 @@ Services > ApmonD has five tabs:
 
 The app is plain LuCI JavaScript. There is no ucode, Lua, CGI or rpcd plugin: settings are a
 standard `form.Map('apmond')`, and the other pages call the `apmond` ubus object through rpcd with
-`rpc.declare()`. The rpcd ACL (`root/usr/share/rpcd/acl.d/luci-app-apmond.json`) allows reading
+`rpc.declare()`. The rpcd ACL (`openwrt/luci-app-apmond/root/usr/share/rpcd/acl.d/luci-app-apmond.json`) allows reading
 `status`, `nodes`, `node` and `clients`, writing `forget`, the uci config `apmond`, and one
 command, `/usr/sbin/apmond read_log`.
 
 ## Building
 
-`linux_openwrt/luci-app-apmond/Makefile` is the feed Makefile (`PKG_HASH:=skip`; only
-`PKG_VERSION` and `PKG_RELEASE` change for a release). It does not use `luci.mk`, because `luci.mk` packages the files next to the
-Makefile; it does the same things for this app (LuCI > 3. Applications, depends on luci-base,
-JavaScript minified when `CONFIG_LUCI_JSMIN` is set, LuCI cache cleared and rpcd reloaded on install).
+`openwrt/luci-app-apmond/Makefile` uses `../../luci.mk`, so it builds inside the luci feed tree.
+In an OpenWrt build tree or SDK with the luci feed installed:
 
-To build a release, put the Makefile at
-`feeds/luci/applications/luci-app-apmond/Makefile` in an OpenWrt build tree or SDK, then:
+    tools/feed-sync.sh copy feeds/luci
+    ./scripts/feeds update -i luci
+    ./scripts/feeds install -p luci luci-app-apmond
+    make package/feeds/luci/luci-app-apmond/compile
 
-    make package/luci-app-apmond/compile
-
-To build the current checkout instead of a release, use a package directory containing only the
-Makefile and a `git-src` symlink to this repository's `.git`, with `CONFIG_SRC_TREE_OVERRIDE=y`
-(Advanced configuration options > Enable package source tree override). The committed tree at HEAD
-is built.
+`luci.mk` handles JavaScript minification (`CONFIG_LUCI_JSMIN`), translations and the LuCI cache
+clear and rpcd reload on install. The minimum apmond version is set with `LUCI_EXTRA_DEPENDS`.
 
 ## Layout
 
 ```
-htdocs/luci-static/resources/view/apmond/  # The views and common.js
-root/usr/share/luci/menu.d/                # Menu entry, Services > ApmonD
-root/usr/share/rpcd/acl.d/                 # rpcd ACL
-po/templates/apmond.pot                    # Translation template
-linux_openwrt/luci-app-apmond/Makefile     # OpenWrt package Makefile (feed template)
-tests/                                     # View tests, run with node (not installed)
+openwrt/luci-app-apmond/                     # = applications/luci-app-apmond in openwrt/luci
+  Makefile                                   # luci.mk package Makefile, as in the feed
+  htdocs/luci-static/resources/view/apmond/  # The views and common.js
+  root/usr/share/luci/menu.d/                # Menu entry, Services > ApmonD
+  root/usr/share/rpcd/acl.d/                 # rpcd ACL
+  po/templates/apmond.pot                    # Translation template
+tools/feed-sync.sh                           # Copy to / check against an openwrt/luci checkout
+tests/                                       # View tests, run with node (not installed)
 ```
 
 ## Tests
@@ -87,4 +100,6 @@ directory is not installed.
 
 ## Translations
 
-`po/templates/apmond.pot` is generated with the luci feed's `build/i18n-scan.pl`.
+`openwrt/luci-app-apmond/po/templates/apmond.pot` is generated in the openwrt/luci checkout,
+after a copy, with `./build/i18n-scan.pl applications/luci-app-apmond > applications/luci-app-apmond/po/templates/apmond.pot`,
+and copied back, so its paths are the feed paths.

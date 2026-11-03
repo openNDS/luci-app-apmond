@@ -1,3 +1,12 @@
+luci-app-apmond (2.0.2beta)
+  * Change - layout: the app is in openwrt/luci-app-apmond/, laid out as applications/luci-app-apmond in openwrt/luci, with the luci.mk Makefile used there (LUCI_EXTRA_DEPENDS apmond >= 2.0.0); a feed pull request is a copy of this directory [bluewavenet]
+  * Remove - linux_openwrt/luci-app-apmond/Makefile, the release tarball feed Makefile [bluewavenet]
+  * Add - tools/feed-sync.sh: copy the app directory to an openwrt/luci checkout, or check that they match [bluewavenet]
+  * Change - translation template regenerated with the feed paths [bluewavenet]
+  * Change - README: development workflow (beta branch, PR to master, feed copy) and the new layout [bluewavenet]
+
+ -- Rob White <rob@blue-wave.net>  unreleased
+
 luci-app-apmond (2.0.1)
   * Fix - collector banner: the Go to collector link keeps the scheme the page was loaded with (https stays https) instead of always using http [bluewavenet]
   * Fix - collector banner: links to the collector in use (status collector: the collector ULA, the LAN IPv4 gateway fallback or the configured collector), falling back to collector_ula; IPv6 addresses in brackets, IPv4 and names as they are [bluewavenet]
