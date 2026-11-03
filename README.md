@@ -76,6 +76,17 @@ In an OpenWrt build tree or SDK with the luci feed installed:
     ./scripts/feeds install -p luci luci-app-apmond
     make package/feeds/luci/luci-app-apmond/compile
 
+Or let the sync tool do all of that for the current checkout:
+
+    tools/feed-sync.sh build-beta /path/to/sdk [version] [release]
+
+It copies `openwrt/luci-app-apmond/` to the SDK's `feeds/luci/applications/luci-app-apmond`,
+refreshes the luci feed index, installs and builds the package, and prints the apk path. On a
+branch named `X.Y.Zbeta` the apk is versioned `X.Y.Z_beta` (for example
+`luci-app-apmond-2.0.2_beta-r1.apk`), so beta apks are easy to tell apart; give `version` and
+`release` to override, for example `tools/feed-sync.sh build-beta ~/sdk 2.0.2_beta 3`. Only the
+SDK copy of the Makefile is changed. The version shown in the LuCI footer comes from `common.js`.
+
 `luci.mk` handles JavaScript minification (`CONFIG_LUCI_JSMIN`), translations and the LuCI cache
 clear and rpcd reload on install. The minimum apmond version is set with `LUCI_EXTRA_DEPENDS`.
 
