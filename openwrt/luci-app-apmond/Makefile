@@ -10,7 +10,7 @@ LUCI_DESCRIPTION:=Settings, status, access points, clients and log for ApmonD 2.
 LUCI_DEPENDS:=+luci-base +apmond
 LUCI_EXTRA_DEPENDS:=apmond (>=2.0.0)
 
-PKG_VERSION:=2.0.1
+PKG_VERSION:=2.0.2_beta
 PKG_RELEASE:=1
 PKG_LICENSE:=GPL-2.0-only
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>

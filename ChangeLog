@@ -4,6 +4,7 @@ luci-app-apmond (2.0.2beta)
   * Add - tools/feed-sync.sh: copy the app directory to an openwrt/luci checkout, or check that they match [bluewavenet]
   * Add - tools/feed-sync.sh build-beta: build the checkout in an SDK, beta apks versioned X.Y.Z_beta from the branch name [bluewavenet]
   * Change - translation template regenerated with the feed paths [bluewavenet]
+  * Change - version 2.0.2beta (PKG_VERSION 2.0.2_beta, PKG_RELEASE 1), last_version 2.0.1 [bluewavenet]
   * Change - README: development workflow (beta branch, PR to master, feed copy) and the new layout [bluewavenet]
 
  -- Rob White <rob@blue-wave.net>  unreleased

@@ -200,8 +200,8 @@ function ok(msg) {
 	assert.strictEqual(common.formatWhere(clients.clients[0]), 'eth0.1@br-lan');
 	assert.strictEqual(common.formatWhere(lost.nodes[1].clients[0]), 'House-f9d1@phy0-ap0');
 	ok('common: port@bridge for wired, SSID@interface for Wi-Fi');
-	assert.strictEqual(common.footerText(statusC), 'luci-app-apmond 2.0.1, apmond 2.0.0_beta-r14 (66a4b9e)');
-	assert.strictEqual(common.footerText(null), 'luci-app-apmond 2.0.1, apmond unknown');
+	assert.strictEqual(common.footerText(statusC), 'luci-app-apmond 2.0.2beta, apmond 2.0.0_beta-r14 (66a4b9e)');
+	assert.strictEqual(common.footerText(null), 'luci-app-apmond 2.0.2beta, apmond unknown');
 	ok('common: footer with package version and build commit');
 	t = text(common.collectorBanner(statusS));
 	assert.ok(t.includes('Not the collector.'));
