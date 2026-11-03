@@ -210,8 +210,9 @@ function ok(msg) {
 	assert.strictEqual((await common.getStatus()).role, 'collector');
 	ubus = {};
 	assert.strictEqual(await common.getStatus(), null);
-	assert.deepStrictEqual(await common.getNodes(), []);
-	ok('common: ubus errors give null / []');
+	assert.strictEqual(await common.getNodes(), null);
+	assert.strictEqual(await common.getClients(), null);
+	ok('common: ubus errors give null');
 
 	// Status
 	const st = loadView('status');
@@ -230,6 +231,10 @@ function ok(msg) {
 	v = Object.assign({}, statusC, { restart_needed: true, last_status: 401 });
 	assert.strictEqual(st.statusWarnings(v).length, 2);
 	ok('status: restart needed and rejected report are warnings');
+	v = Object.assign({}, statusS, { last_status: 0 });
+	assert.ok(st.statusWarnings(v).includes('No report has been sent yet.'));
+	assert.ok(!st.statusWarnings(v).some((w) => w.includes('not accepted')));
+	ok('status: last_status 0 on a sender is no report sent yet');
 	assert.ok(text(st.renderStatus(null)).includes('Could not read'));
 	ok('status: no daemon');
 	t = text(st.render(statusS));

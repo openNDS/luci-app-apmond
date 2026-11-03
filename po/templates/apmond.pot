@@ -37,7 +37,7 @@ msgstr ""
 msgid "3 - debug"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:163
+#: htdocs/luci-static/resources/view/apmond/settings.js:166
 msgid ""
 "A backed-off collector takes over the collector address after it has not "
 "answered this many checks. Default 3."
@@ -51,7 +51,7 @@ msgstr ""
 msgid "Access points"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/accesspoints.js:369
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:376
 msgid ""
 "Access points that have reported to this node, the collector. Click \"Show "
 "clients\" for the radios and clients of an access point. Late and lost nodes "
@@ -67,11 +67,11 @@ msgstr ""
 msgid "ApmonD"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/accesspoints.js:398
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:405
 msgid "ApmonD Access Points"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/clients.js:136
+#: htdocs/luci-static/resources/view/apmond/clients.js:146
 msgid "ApmonD Clients"
 msgstr ""
 
@@ -79,7 +79,7 @@ msgstr ""
 msgid "ApmonD Log"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:259
+#: htdocs/luci-static/resources/view/apmond/status.js:263
 msgid "ApmonD Status"
 msgstr ""
 
@@ -138,6 +138,10 @@ msgstr ""
 msgid "Collector in use"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/apmond/settings.js:153
+msgid "Collector re-check"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/apmond/settings.js:148
 msgid ""
 "Collector: also accept the previous key epoch for this many seconds after "
@@ -145,6 +149,13 @@ msgid ""
 msgstr ""
 
 #: htdocs/luci-static/resources/view/apmond/settings.js:154
+msgid ""
+"Collector: re-run duplicate address detection on the collector address every "
+"this many report cycles, and give way if another node holds it. 0 turns it "
+"off. Default 10."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/settings.js:157
 msgid ""
 "Collector: reports whose time differs from the collector by more than this "
 "many seconds are rejected. Default 120."
@@ -156,7 +167,7 @@ msgid ""
 "greyed out, before it is removed. Default 600."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:157
+#: htdocs/luci-static/resources/view/apmond/settings.js:160
 msgid "Collector: the largest accepted report, in bytes. Default 262144."
 msgstr ""
 
@@ -175,9 +186,17 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/apmond/accesspoints.js:347
 #: htdocs/luci-static/resources/view/apmond/clients.js:92
-#: htdocs/luci-static/resources/view/apmond/status.js:218
+#: htdocs/luci-static/resources/view/apmond/status.js:220
 msgid ""
 "Could not read the ApmonD status. Is apmond installed, enabled and running?"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/clients.js:102
+msgid "Could not read the client list from apmond."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:358
+msgid "Could not read the node list from apmond."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/apmond/status.js:53
@@ -206,7 +225,7 @@ msgstr ""
 msgid "Enabled"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/clients.js:137
+#: htdocs/luci-static/resources/view/apmond/clients.js:147
 msgid ""
 "Every client of every access point, refreshed every 30 seconds. Stale "
 "clients are greyed out."
@@ -216,7 +235,7 @@ msgstr ""
 msgid "Extension blocks"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/clients.js:120
+#: htdocs/luci-static/resources/view/apmond/clients.js:130
 msgid "Filter"
 msgstr ""
 
@@ -244,6 +263,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/apmond/settings.js:88
 msgid "General Settings"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:602
+msgid "Go to collector"
 msgstr ""
 
 #: root/usr/share/rpcd/acl.d/luci-app-apmond.json:3
@@ -310,7 +333,7 @@ msgstr ""
 msgid "Log"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:168
+#: htdocs/luci-static/resources/view/apmond/settings.js:171
 msgid "Log mountpoint"
 msgstr ""
 
@@ -323,19 +346,19 @@ msgstr ""
 msgid "MAC address"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:165
+#: htdocs/luci-static/resources/view/apmond/settings.js:168
 msgid "Maximum claim delay"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:153
+#: htdocs/luci-static/resources/view/apmond/settings.js:156
 msgid "Maximum clock difference"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:174
+#: htdocs/luci-static/resources/view/apmond/settings.js:177
 msgid "Maximum log entries"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:156
+#: htdocs/luci-static/resources/view/apmond/settings.js:159
 msgid "Maximum message size"
 msgstr ""
 
@@ -364,6 +387,10 @@ msgstr ""
 msgid "No clients"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/apmond/status.js:88
+msgid "No report has been sent yet."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/apmond/common.js:343
 msgid "Node"
 msgstr ""
@@ -380,7 +407,11 @@ msgstr ""
 msgid "Nodes"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:189
+#: htdocs/luci-static/resources/view/apmond/common.js:587
+msgid "Not the collector."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/status.js:191
 msgid "Other"
 msgstr ""
 
@@ -422,7 +453,7 @@ msgstr ""
 msgid "Radios"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:166
+#: htdocs/luci-static/resources/view/apmond/settings.js:169
 msgid ""
 "Random delay of 0 to this many seconds before the collector address is first "
 "claimed. Default 10."
@@ -432,7 +463,7 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/accesspoints.js:399
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:406
 msgid "Refreshed every 30 seconds."
 msgstr ""
 
@@ -485,7 +516,7 @@ msgstr ""
 msgid "Role reason"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:162
+#: htdocs/luci-static/resources/view/apmond/settings.js:165
 msgid "Router takeover misses"
 msgstr ""
 
@@ -505,7 +536,7 @@ msgstr ""
 msgid "SSID@interface or port@bridge"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:160
+#: htdocs/luci-static/resources/view/apmond/settings.js:163
 msgid "Seconds before the first report. Default 10."
 msgstr ""
 
@@ -538,7 +569,7 @@ msgstr ""
 msgid "Stale client timeout"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:159
+#: htdocs/luci-static/resources/view/apmond/settings.js:162
 msgid "Startup delay"
 msgstr ""
 
@@ -595,13 +626,13 @@ msgid ""
 "of every node."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:88
+#: htdocs/luci-static/resources/view/apmond/status.js:90
 msgid ""
 "The last report was not accepted by the collector (HTTP status %s). Check "
 "that every node has the same passphrase, port and key epoch."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:175
+#: htdocs/luci-static/resources/view/apmond/settings.js:178
 msgid "The log file is trimmed to the last this many lines. Default 500."
 msgstr ""
 
@@ -621,21 +652,31 @@ msgid ""
 "set in Settings."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:260
+#: htdocs/luci-static/resources/view/apmond/status.js:264
 msgid "The status of apmond on this node, refreshed every 10 seconds."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/accesspoints.js:364
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:371
 msgid ""
 "These nodes use the built-in default passphrase: %s. Set your own passphrase "
 "in Settings, the same on every node."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/accesspoints.js:357
+#: htdocs/luci-static/resources/view/apmond/common.js:582
+msgid "This node is the collector."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/accesspoints.js:364
 msgid "This node is the collector. No reports have been received yet."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/common.js:577
+#: htdocs/luci-static/resources/view/apmond/common.js:594
+msgid ""
+"This node reports to the collector at %s, which has the data of every access "
+"point."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/apmond/common.js:590
 msgid ""
 "This node reports to the collector, which has the data of every access point."
 msgstr ""
@@ -658,7 +699,7 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/settings.js:169
+#: htdocs/luci-static/resources/view/apmond/settings.js:172
 msgid ""
 "Where the log is kept, in the apmond directory of this mountpoint, for "
 "example /mnt/usb. Default /tmp."
@@ -672,7 +713,7 @@ msgstr ""
 msgid "apmond"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/common.js:611
+#: htdocs/luci-static/resources/view/apmond/common.js:627
 msgid "apmond %s"
 msgstr ""
 
@@ -706,16 +747,16 @@ msgstr ""
 msgid "lost"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/common.js:593
+#: htdocs/luci-static/resources/view/apmond/common.js:609
 msgid "luci-app-apmond %s"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:140
+#: htdocs/luci-static/resources/view/apmond/status.js:142
 msgid "no"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:125
-#: htdocs/luci-static/resources/view/apmond/status.js:145
+#: htdocs/luci-static/resources/view/apmond/status.js:127
+#: htdocs/luci-static/resources/view/apmond/status.js:147
 msgid "none"
 msgstr ""
 
@@ -735,7 +776,7 @@ msgstr ""
 msgid "this node"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/common.js:600
+#: htdocs/luci-static/resources/view/apmond/common.js:616
 msgid "unknown"
 msgstr ""
 
@@ -747,22 +788,6 @@ msgstr ""
 msgid "vni %s (%s)"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/apmond/status.js:137
+#: htdocs/luci-static/resources/view/apmond/status.js:139
 msgid "yes"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/apmond/common.js:587
-msgid "Not the collector."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/apmond/common.js:594
-msgid "This node reports to the collector at %s, which has the data of every access point."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/apmond/common.js:602
-msgid "Go to collector"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/apmond/common.js:582
-msgid "This node is the collector."
 msgstr ""

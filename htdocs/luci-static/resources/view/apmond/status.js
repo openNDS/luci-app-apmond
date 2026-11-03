@@ -84,7 +84,9 @@ return view.extend({
 			w.push(_('The clock is not synced with the collector yet, so reports cannot be sent.'));
 		}
 
-		if (st.last_status != null && st.last_status != 200) {
+		if (st.role != 'collector' && st.last_status === 0) {
+			w.push(_('No report has been sent yet.'));
+		} else if (st.last_status != null && st.last_status != 0 && st.last_status != 200) {
 			w.push(_('The last report was not accepted by the collector (HTTP status %s). Check that every node has the same passphrase, port and key epoch.').format(st.last_status));
 		}
 

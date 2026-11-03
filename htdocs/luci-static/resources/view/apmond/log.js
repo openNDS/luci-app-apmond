@@ -33,7 +33,7 @@ return view.extend({
 		var self = this;
 
 		return this.fetchLog().then(function(t) {
-			dom.content(self.pre, self.logText(t));
+			dom.content(self.pre, [ self.logText(t) ]);
 			self.pre.scrollTop = self.pre.scrollHeight;
 		});
 	},

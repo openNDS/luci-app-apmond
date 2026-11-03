@@ -353,6 +353,12 @@ return view.extend({
 			return E('div', {}, out);
 		}
 
+		if (nodes == null) {
+			out.push(E('div', { 'class': 'alert-message error' },
+				_('Could not read the node list from apmond.')));
+			return E('div', {}, out);
+		}
+
 		if (!nodes.length) {
 			out.push(E('div', { 'class': 'alert-message notice' },
 				_('This node is the collector. No reports have been received yet.')));

@@ -96,6 +96,13 @@ return view.extend({
 			return E('div', {}, [ common.collectorBanner(data.st) ]);
 		}
 
+		if (data.clients == null) {
+			return E('div', {}, [
+				common.collectorBanner(data.st),
+				E('div', { 'class': 'alert-message error' }, _('Could not read the client list from apmond.'))
+			]);
+		}
+
 		return E('div', {}, [
 			common.collectorBanner(data.st),
 			this.renderClients(data.clients)

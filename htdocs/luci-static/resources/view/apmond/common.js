@@ -63,21 +63,21 @@ return baseclass.extend({
 		});
 	},
 
-	/* resolves to the list of nodes ([] on a sender, or on any error) */
+	/* resolves to the list of nodes, or null when the call fails */
 	getNodes: function() {
-		return L.resolveDefault(callNodes(), []).then(function(list) {
+		return L.resolveDefault(callNodes(), null).then(function(list) {
 			if (!Array.isArray(list)) {
-				return [];
+				return null;
 			}
 			return list;
 		});
 	},
 
-	/* resolves to the flat client list, stale clients included ([] on any error) */
+	/* resolves to the flat client list, stale clients included, or null when the call fails */
 	getClients: function() {
-		return L.resolveDefault(callClients(true), []).then(function(list) {
+		return L.resolveDefault(callClients(true), null).then(function(list) {
 			if (!Array.isArray(list)) {
-				return [];
+				return null;
 			}
 			return list;
 		});
@@ -636,7 +636,7 @@ return baseclass.extend({
 		}, [ this.footerText() ]);
 
 		this.getStatus().then(function(st) {
-			dom.content(node, self.footerText(st));
+			dom.content(node, [ self.footerText(st) ]);
 		});
 
 		return node;

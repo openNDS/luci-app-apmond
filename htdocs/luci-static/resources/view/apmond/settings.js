@@ -150,6 +150,9 @@ return view.extend({
 		this.intValue(s, 'advanced', 'client_stale_timeout', _('Stale client timeout'),
 			_('Collector: seconds a client that has gone from its node\'s report is kept, greyed out, before it is removed. Default 600.'), '600', 0, 86400);
 
+		this.intValue(s, 'advanced', 'collector_recheck', _('Collector re-check'),
+			_('Collector: re-run duplicate address detection on the collector address every this many report cycles, and give way if another node holds it. 0 turns it off. Default 10.'), '10', 0, 1000);
+
 		this.intValue(s, 'advanced', 'max_age', _('Maximum clock difference'),
 			_('Collector: reports whose time differs from the collector by more than this many seconds are rejected. Default 120.'), '120', 10, 3600);
 
