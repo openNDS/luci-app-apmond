@@ -6,8 +6,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-apmond
-PKG_VERSION:=2.0.0_beta
-PKG_RELEASE:=5
+PKG_VERSION:=2.0.0
+PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Rob White <rob@blue-wave.net>
 PKG_LICENSE:=GPL-2.0-only

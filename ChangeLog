@@ -21,7 +21,7 @@ luci-app-apmond (2.0.0)
   * Fix - Makefile: no .js.o files are left in the package when jsmin is missing [bluewavenet]
   * Change - Settings: the apmond 2.x options (role, port, collector, interface, netdev, key_epoch, prev_epoch_grace, client_stale_timeout, max_message_size), 1.x only options removed, passphrase as a password field; Save & Apply restarts apmond through its reload trigger [bluewavenet]
 
- -- Rob White <rob@blue-wave.net>  TODO-DATE
+ -- Rob White <rob@blue-wave.net>  Tue, 03 Nov 2026 13:04:11 +0000
 
 luci-app-apmond (1.0.1)
   * Add - version and last_version in one place (view/apmond/version.js), shown at the foot of each ApmonD page with the installed apmond version from apmond -v, unknown if apmond has no -v [bluewavenet]

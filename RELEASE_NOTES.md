@@ -1,7 +1,6 @@
-# luci-app-apmond 2.0.0 — release notes (DRAFT)
+# luci-app-apmond 2.0.0 — release notes
 
-> Draft for review. Based on the luci-app-apmond history from 2.0.0beta (`15d6ebe`) to 2.0.0_beta-r4
-> (`ddb39de`) and the docs commit (`465452a`). The release date is still a placeholder: TODO-DATE.
+Released Tue, 03 Nov 2026. Tag `v2.0.0` in [openNDS/luci-app-apmond](https://github.com/openNDS/luci-app-apmond).
 
 ## Overview
 
