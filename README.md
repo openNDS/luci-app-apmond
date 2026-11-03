@@ -36,7 +36,7 @@ Services > ApmonD has five tabs:
 * **Collector banner** - on a sender, Status, Access points and Clients start with "This node
   reports to the collector at <collector ULA>" and a "Go to collector" button that opens
   `http://[<collector ULA>]/cgi-bin/luci/admin/services/apmond/accesspoints` in a new tab, so
-  the data of every node can be reached from LuCI on any node. On the collector, a small "This
+  the data of every access point can be reached from LuCI on any of them. On the collector, a small "This
   node is the collector." note.
 * **Clients** - on the collector, `ubus call apmond clients` with stale clients: every client of
   every node in one list, the same columns as on Access points plus the node, with a filter box
