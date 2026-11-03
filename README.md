@@ -4,14 +4,14 @@ LuCI app for [ApmonD](https://github.com/openNDS/apmond), the access point monit
 
 The source stays in this repository. The [openwrt/luci](https://github.com/openwrt/luci) feed
 carries only `applications/luci-app-apmond/Makefile`, a copy of
-`linux_openwrt/luci-app-apmond/Makefile` with the release hash, which downloads the tagged release
+`linux_openwrt/luci-app-apmond/Makefile`, which downloads the tagged release
 from GitHub and installs from it, as the [apmond](https://github.com/openNDS/apmond) package does.
 
 ## apmond 2.x
 
-This branch (`2.0.0beta`) is for apmond 2.x, the C daemon in
-[openNDS/apmon](https://github.com/openNDS/apmon). It reads apmond over ubus, so it does not work
-with apmond 1.x; use luci-app-apmond 1.0.1 there.
+luci-app-apmond 2.x is for apmond 2.x, the C daemon in
+[openNDS/apmond](https://github.com/openNDS/apmond). It reads apmond over ubus, so it does not work
+with apmond 1.x; use luci-app-apmond 1.0.1 (branch `1.x`) there.
 
 ## Pages
 
@@ -53,12 +53,12 @@ command, `/usr/sbin/apmond read_log`.
 
 ## Building
 
-`linux_openwrt/luci-app-apmond/Makefile` is the feed Makefile (a template: `PKG_HASH` is filled in
-for each release). It does not use `luci.mk`, because `luci.mk` packages the files next to the
+`linux_openwrt/luci-app-apmond/Makefile` is the feed Makefile (`PKG_HASH:=skip`; only
+`PKG_VERSION` and `PKG_RELEASE` change for a release). It does not use `luci.mk`, because `luci.mk` packages the files next to the
 Makefile; it does the same things for this app (LuCI > 3. Applications, depends on luci-base,
 JavaScript minified when `CONFIG_LUCI_JSMIN` is set, LuCI cache cleared and rpcd reloaded on install).
 
-To build a release, put the Makefile with the release hash at
+To build a release, put the Makefile at
 `feeds/luci/applications/luci-app-apmond/Makefile` in an OpenWrt build tree or SDK, then:
 
     make package/luci-app-apmond/compile

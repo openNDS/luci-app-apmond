@@ -8,7 +8,7 @@
  * version footer. Not a page of its own (it is not in the menu); the views require it as
  * view.apmond.common.
  *
- * apmond 2.x is a C daemon with the ubus object "apmond" (see docs/PROTOCOL.md in openNDS/apmon).
+ * apmond 2.x is a C daemon with the ubus object "apmond" (see docs/PROTOCOL.md in openNDS/apmond).
  * The views call it through rpcd (rpc.declare), allowed by
  * /usr/share/rpcd/acl.d/luci-app-apmond.json. Nothing is run through a shell except
  * "apmond read_log" on the Log page.
