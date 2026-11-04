@@ -15,8 +15,8 @@
  */
 
 /* luci-app-apmond version, as apmond: the only place to change at a version bump */
-var last_version = '1.0.1';
-var version = '2.0.1';
+var last_version = '2.0.1';
+var version = '2.0.2beta';
 
 var callStatus = rpc.declare({
 	object: 'apmond',
